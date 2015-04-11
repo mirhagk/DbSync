@@ -130,6 +130,12 @@ ORDER BY column_id
                             case Settings.Strategy.MergeWithoutDelete:
                                 cmd.CommandText =
 @"
+UPDATE t
+SET @columnUpdateList
+FROM @target t
+INNER JOIN @source s ON t.@id = s.@id
+
+
 SET IDENTITY_INSERT @target ON
 
 INSERT INTO @target (@id, @columns)
@@ -139,7 +145,16 @@ WHERE s.@id NOT IN (SELECT @id FROM @target t)
 
 SET IDENTITY_INSERT @target OFF
 
-".FormatWith(new { target = Get2PartName(table), id = primaryKey, columns = string.Join(",", rest), source = "##" + Get1PartName(table) });
+
+
+".FormatWith(new
+{
+    target = Get2PartName(table),
+    id = primaryKey,
+    columns = string.Join(",", rest),
+    source = "##" + Get1PartName(table),
+    columnUpdateList = string.Join(",", rest.Select(r => r + "=s." + r))
+});
                                 break;
                         }
 
@@ -153,7 +168,7 @@ SET IDENTITY_INSERT @target OFF
             var settings = new Settings
             {
                 ConnectionString = "server=.;database=BusTap;Integrated Security=True;",
-                Tables = new List<string> { "StopTimes" }
+                Tables = new List<string> { "Calendars", "Stops" }//"StopTimes"
             };
             System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
             watch.Start();
