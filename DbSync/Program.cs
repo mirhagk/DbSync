@@ -14,18 +14,6 @@ namespace DbSync
 {
     class Program
     {
-        public class Settings
-        {
-            public string ConnectionString { get; set; }
-            public List<string> Tables { get; set; } = new List<string>();
-            public string Path { get; set; } = System.IO.Path.GetFullPath(".");
-            public enum Strategy
-            {
-                MergeWithoutDelete, MergeWithDelete, Add, Overwrite
-            }
-            public Strategy MergeStrategy { get; set; } = Strategy.MergeWithoutDelete;
-
-        }
         static string Get2PartName(string tableName)
         {
             if (!tableName.Contains("."))
@@ -138,7 +126,7 @@ ORDER BY column_id
             {
                 ConnectionString = "server=.;database=BusTap;Integrated Security=True;",
                 Tables = new List<string> { "Calendars", "Stops" },//"StopTimes"
-                MergeStrategy = Settings.Strategy.MergeWithDelete
+                MergeStrategy = Merge.Strategy.MergeWithDelete
             };
             System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
             watch.Start();

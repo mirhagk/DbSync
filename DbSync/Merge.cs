@@ -8,6 +8,10 @@ namespace DbSync
 {
     class Merge
     {
+        public enum Strategy
+        {
+            MergeWithoutDelete, MergeWithDelete, Add, Overwrite
+        }
         private static string mergeWithoutDeleteSQL = @"
 UPDATE t
 SET @columnUpdateList
@@ -30,7 +34,7 @@ DELETE FROM @target
 WHERE @target.@id NOT IN (SELECT @id FROM @source)
 ";
 
-        public static string GetSqlForMergeStrategy(Program.Settings.Strategy mergeStrategy, string target, string source, string primaryKey, List<string> restOfColumns)
+        public static string GetSqlForMergeStrategy(Strategy mergeStrategy, string target, string source, string primaryKey, List<string> restOfColumns)
         {
             var configObject = new
             {
@@ -42,9 +46,9 @@ WHERE @target.@id NOT IN (SELECT @id FROM @source)
             };
             switch (mergeStrategy)
             {
-                case Program.Settings.Strategy.MergeWithoutDelete:
+                case Strategy.MergeWithoutDelete:
                     return mergeWithoutDeleteSQL.FormatWith(configObject);
-                case Program.Settings.Strategy.MergeWithDelete:
+                case Strategy.MergeWithDelete:
                     return mergeWithDeleteSQL.FormatWith(configObject);
                 default:
                     throw new NotImplementedException("That merge strategy is not yet supported");
