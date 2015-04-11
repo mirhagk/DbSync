@@ -95,8 +95,7 @@ LEFT JOIN sys.all_columns c ON o.object_id = c.object_id
 WHERE o.name = '@table'
 ORDER BY column_id
 ".FormatWith(new { table = Get1PartName(table) });
-
-                            //"SELECT * INTO ##" + Get1PartName(table) + " FROM " + Get2PartName(table) + " WHERE 1=0";
+                        
                         cmd.CommandType = CommandType.Text;
                         var sqlReader = cmd.ExecuteReader();
 
@@ -113,50 +112,14 @@ ORDER BY column_id
                         cmd.CommandText = "CREATE TABLE ##" + Get1PartName(table) + "( " + string.Join(", ", fields.Select(f => f + " NVARCHAR(MAX) NULL"))+ ")";
                         cmd.ExecuteNonQuery();
 
-                        XmlReader xmlReader = XmlReader.Create(Path.Combine(settings.Path, table), new XmlReaderSettings { Async = true });
-                        
-                        
+                        var reader = new XmlRecordDataReader(Path.Combine(settings.Path, table), fields);
 
-                        //xmlReader.Read();
+                        SqlBulkCopy bulkCopy = new SqlBulkCopy(conn);
+                        bulkCopy.BulkCopyTimeout = 120;
+                        bulkCopy.DestinationTableName = "##" + Get1PartName(table);
+                        bulkCopy.EnableStreaming = true;
 
-
-                        var done = false;
-                        while (!done)
-                        {
-                            var records = new List<Dictionary<string, object>>(skipByAmount);
-                            for (int i = 0; i < skipByAmount; i++)
-                            {
-                                if (!xmlReader.ReadToFollowing("row"))
-                                {
-                                    done = true;
-                                    break;
-                                }
-                                xmlReader.MoveToFirstAttribute();
-
-                                var row = new Dictionary<string,object>();
-                                for (int p = 0; p < xmlReader.AttributeCount; p++)
-                                {
-                                    if (!fields.Contains(xmlReader.Name))
-                                        fields.Add(xmlReader.Name);
-                                    row[xmlReader.Name] = xmlReader.GetValueAsync().Result;
-                                    xmlReader.MoveToNextAttribute();
-                                }
-
-                                records.Add(row);
-                            }
-
-                            SqlBulkCopy bulkCopy = new SqlBulkCopy(conn);
-                            bulkCopy.BulkCopyTimeout = 120;
-                            bulkCopy.DestinationTableName = "##" + Get1PartName(table);
-                            //DataTable dataTable = new DataTable();
-                            //using (var reader = ObjectReader.Create(records, fields.ToArray()))
-                            using (var reader = new DictionaryDataReader(records,fields))
-                            {
-                                bulkCopy.WriteToServer(reader);
-                                //dataTable.Load(reader);
-                            }
-                            //bulkCopy.WriteToServer(dataTable);
-                        }
+                        bulkCopy.WriteToServer(reader);
 
                         var primaryKey = fields.SingleOrDefault(f => f.ToLowerInvariant() == "id");
 
@@ -190,10 +153,17 @@ SET IDENTITY_INSERT @target OFF
             var settings = new Settings
             {
                 ConnectionString = "server=.;database=BusTap;Integrated Security=True;",
-                Tables = new List<string> { "Calendars", "Stops" }
+                Tables = new List<string> { "StopTimes" }
             };
+            System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+            watch.Start();
 
+            //Export(settings).Wait();
             Import(settings);
+
+            watch.Stop();
+            Console.WriteLine($"Elapsed {watch.ElapsedMilliseconds}ms");
+
             Console.WriteLine("Press any key to continue");
             Console.ReadKey();
         }
