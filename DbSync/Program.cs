@@ -120,8 +120,13 @@ ORDER BY column_id
                 }
             }
         }
+        class CommandLineArguments
+        {
+
+        }
         static void Main(string[] args)
         {
+            var cmdArgs = PowerCommandParser.Parser.ParseArguments<CommandLineArguments>(args);
             var settings = new Settings
             {
                 ConnectionString = "server=.;database=BusTap;Integrated Security=True;",
