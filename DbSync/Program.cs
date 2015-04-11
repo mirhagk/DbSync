@@ -125,38 +125,7 @@ ORDER BY column_id
 
                         var rest = fields.Where(f => f != primaryKey).ToList();
 
-                        switch (settings.MergeStrategy)
-                        {
-                            case Settings.Strategy.MergeWithoutDelete:
-                                cmd.CommandText =
-@"
-UPDATE t
-SET @columnUpdateList
-FROM @target t
-INNER JOIN @source s ON t.@id = s.@id
-
-
-SET IDENTITY_INSERT @target ON
-
-INSERT INTO @target (@id, @columns)
-SELECT @id, @columns
-FROM @source s
-WHERE s.@id NOT IN (SELECT @id FROM @target t)
-
-SET IDENTITY_INSERT @target OFF
-
-
-
-".FormatWith(new
-{
-    target = Get2PartName(table),
-    id = primaryKey,
-    columns = string.Join(",", rest),
-    source = "##" + Get1PartName(table),
-    columnUpdateList = string.Join(",", rest.Select(r => r + "=s." + r))
-});
-                                break;
-                        }
+                        cmd.CommandText = Merge.GetSqlForMergeStrategy(settings.MergeStrategy, Get2PartName(table), "##" + Get1PartName(table), primaryKey, rest);
 
                         cmd.ExecuteNonQuery();
                     }
@@ -168,7 +137,8 @@ SET IDENTITY_INSERT @target OFF
             var settings = new Settings
             {
                 ConnectionString = "server=.;database=BusTap;Integrated Security=True;",
-                Tables = new List<string> { "Calendars", "Stops" }//"StopTimes"
+                Tables = new List<string> { "Calendars", "Stops" },//"StopTimes"
+                MergeStrategy = Settings.Strategy.MergeWithDelete
             };
             System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
             watch.Start();
