@@ -8,6 +8,15 @@ namespace DbSync
 {
     public static class Extensions
     {
+        public static string FormatWith<T>(this string formatString, T formatObject)
+        {
+            var resultString = formatString;
+            foreach (var property in typeof(T).GetProperties())
+            {
+                resultString = resultString.Replace("@" + property.Name, property.GetValue(formatObject).ToString());
+            }
+            return resultString;
+        }
         public static string AsJson(this object obj)
         {
             return Newtonsoft.Json.JsonConvert.SerializeObject(obj);
