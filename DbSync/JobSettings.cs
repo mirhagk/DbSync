@@ -15,5 +15,6 @@ namespace DbSync
         public List<string> Tables { get; set; } = new List<string>();
         public string Path { get; set; } = System.IO.Path.GetFullPath(".");
         public Merge.Strategy MergeStrategy { get; set; } = Merge.Strategy.MergeWithoutDelete;
+        public string Name { get; set; }
     }
 }

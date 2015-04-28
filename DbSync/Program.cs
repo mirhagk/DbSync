@@ -126,11 +126,25 @@ ORDER BY column_id
             public bool Import { get; set; }
             public bool Export { get; set; }
             public string Config { get; set; }
+            public string Job { get; set; }
         }
         public class Settings
         {
             [XmlElement("Job")]
             public List<JobSettings> Jobs { get; set; }
+        }
+        static void RunJob(JobSettings job, CommandLineArguments cmdArgs)
+        {
+            System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+            watch.Start();
+
+            if (cmdArgs.Export)
+                Export(job).Wait();
+            if (cmdArgs.Import)
+                Import(job);
+
+            watch.Stop();
+            Console.WriteLine($"Executed job {job.Name}, Elapsed {watch.ElapsedMilliseconds}ms");
         }
         static void Main(string[] args)
         {
@@ -140,21 +154,28 @@ ORDER BY column_id
 
             var settings = (Settings)serializer.Deserialize(configFileStream);
 
-            System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
-            watch.Start();
+            if (settings.Jobs.Count == 0)
+            {
+                Console.Error.WriteLine("Must specify at least one job in the config file");
+                return;
+            }
 
-            var selectedJob = settings.Jobs.First();
-
-            if (cmdArgs.Export)
-                Export(selectedJob).Wait();
-            if (cmdArgs.Import)
-                Import(selectedJob);
-
-            watch.Stop();
-            Console.WriteLine($"Elapsed {watch.ElapsedMilliseconds}ms");
-
-            Console.WriteLine("Press any key to continue");
-            Console.ReadKey();
+            if (string.IsNullOrWhiteSpace(cmdArgs.Job))
+            {
+                foreach (var job in settings.Jobs)
+                {
+                    RunJob(job, cmdArgs);
+                }
+            }
+            else
+            {
+                var selectedJob = settings.Jobs.SingleOrDefault(j => j.Name.Equals(cmdArgs.Job, StringComparison.InvariantCultureIgnoreCase));
+                if (selectedJob == null)
+                {
+                    Console.Error.WriteLine($"No job found that matches {cmdArgs.Job}");
+                    return;
+                }
+            }
         }
     }
 }

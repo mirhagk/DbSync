@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="IBM437"?>
 <Settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Job>
+    <Name>Static Data</Name>
     <ConnectionString>server=.;database=BusTap;Integrated Security=True;</ConnectionString>
     <Tables>
       <Table>Calendars</Table>
