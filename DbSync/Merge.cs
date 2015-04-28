@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DbSync
 {
-    class Merge
+    public class Merge
     {
         public enum Strategy
         {

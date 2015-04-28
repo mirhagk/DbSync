@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="IBM437"?>
+<Settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Job>
+    <ConnectionString>server=.;database=BusTap;Integrated Security=True;</ConnectionString>
+    <Tables>
+      <Table>Calendars</Table>
+      <Table>Stops</Table>
+    </Tables>
+    <!--<Path>C:\Users\mirhagk\Documents\GitHub\DbSync\DbSync\bin\Debug</Path>-->
+    <MergeStrategy>MergeWithDelete</MergeStrategy>
+  </Job>
+</Settings>

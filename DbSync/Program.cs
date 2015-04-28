@@ -9,10 +9,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
+using System.Xml.Serialization;
 
 namespace DbSync
 {
-    class Program
+    public class Program
     {
         static string Get2PartName(string tableName)
         {
@@ -24,7 +25,7 @@ namespace DbSync
         {
             return tableName.Split('.').Last();
         }
-        static async Task Export(Settings settings)
+        static async Task Export(JobSettings settings)
         {
             using (var conn = new SqlConnection(settings.ConnectionString))
             {
@@ -67,7 +68,7 @@ namespace DbSync
                 }
             }
         }
-        static void Import(Settings settings)
+        static void Import(JobSettings settings)
         {
             using (var conn = new SqlConnection(settings.ConnectionString))
             {
@@ -122,22 +123,28 @@ ORDER BY column_id
         }
         class CommandLineArguments
         {
-
+            public bool Import { get; set; }
+            public bool Export { get; set; }
+            public string Config { get; set; }
+        }
+        public class Settings
+        {
+            [XmlElement("Job")]
+            public List<JobSettings> Jobs { get; set; }
         }
         static void Main(string[] args)
         {
             var cmdArgs = PowerCommandParser.Parser.ParseArguments<CommandLineArguments>(args);
-            var settings = new Settings
-            {
-                ConnectionString = "server=.;database=BusTap;Integrated Security=True;",
-                Tables = new List<string> { "Calendars", "Stops" },//"StopTimes"
-                MergeStrategy = Merge.Strategy.MergeWithDelete
-            };
+            var serializer = new XmlSerializer(typeof(Settings));
+            StreamReader configFileStream = new StreamReader(cmdArgs.Config);
+
+            var settings = (Settings)serializer.Deserialize(configFileStream);
+
             System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
             watch.Start();
 
             //Export(settings).Wait();
-            Import(settings);
+            Import(settings.Jobs.First());
 
             watch.Stop();
             Console.WriteLine($"Elapsed {watch.ElapsedMilliseconds}ms");
