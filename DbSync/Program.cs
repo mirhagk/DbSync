@@ -143,8 +143,12 @@ ORDER BY column_id
             System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
             watch.Start();
 
-            //Export(settings).Wait();
-            Import(settings.Jobs.First());
+            var selectedJob = settings.Jobs.First();
+
+            if (cmdArgs.Export)
+                Export(selectedJob).Wait();
+            if (cmdArgs.Import)
+                Import(selectedJob);
 
             watch.Stop();
             Console.WriteLine($"Elapsed {watch.ElapsedMilliseconds}ms");
