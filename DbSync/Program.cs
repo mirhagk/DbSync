@@ -118,7 +118,7 @@ ORDER BY column_id
 
                         var rest = fields.Where(f => f != primaryKey).ToList();
 
-                        cmd.CommandText = Merge.GetSqlForMergeStrategy(settings.MergeStrategy, Get2PartName(table), "##" + Get1PartName(table), primaryKey, rest);
+                        cmd.CommandText = Merge.GetSqlForMergeStrategy(settings, Get2PartName(table), "##" + Get1PartName(table), primaryKey, rest);
 
                         cmd.ExecuteNonQuery();
                     }

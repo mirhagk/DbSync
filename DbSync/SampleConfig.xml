@@ -16,5 +16,6 @@
       <ModifiedUser>ModifiedUser</ModifiedUser>
     </AuditColumns>
     <IgnoreAuditColumnsOnExport>true</IgnoreAuditColumnsOnExport>
+    <UseAuditColumnsOnImport>true</UseAuditColumnsOnImport>
   </Job>
 </Settings>

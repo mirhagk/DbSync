@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,29 +13,17 @@ namespace DbSync
         {
             MergeWithoutDelete, MergeWithDelete, Add, Overwrite
         }
-        private static string mergeWithoutDeleteSQL = @"
-UPDATE t
-SET @columnUpdateList
-FROM @target t
-INNER JOIN @source s ON t.@id = s.@id
+        private static string loadScript(string scriptName)
+        {
+            scriptName = scriptName.Replace("SQL", "");
+            return File.ReadAllText(Path.Combine("scripts", Path.ChangeExtension(scriptName, "sql")));
+        }
+        private static string mergeWithoutDeleteSQL = loadScript(nameof(mergeWithDeleteSQL));
+        private static string mergeWithDeleteSQL = loadScript(nameof(mergeWithDeleteSQL));
+        private static string mergeWithoutDeleteWithAuditSQL = loadScript(nameof(mergeWithoutDeleteWithAuditSQL));
+        private static string mergeWithDeleteWithAuditSQL = loadScript(nameof(mergeWithDeleteWithAuditSQL));
 
-
-SET IDENTITY_INSERT @target ON
-
-INSERT INTO @target (@id, @columns)
-SELECT @id, @columns
-FROM @source s
-WHERE s.@id NOT IN (SELECT @id FROM @target t)
-
-SET IDENTITY_INSERT @target OFF
-
-";
-        private static string mergeWithDeleteSQL = mergeWithoutDeleteSQL + @"
-DELETE FROM @target
-WHERE @target.@id NOT IN (SELECT @id FROM @source)
-";
-
-        public static string GetSqlForMergeStrategy(Strategy mergeStrategy, string target, string source, string primaryKey, List<string> restOfColumns)
+        public static string GetSqlForMergeStrategy(JobSettings settings, string target, string source, string primaryKey, List<string> restOfColumns)
         {
             var configObject = new
             {
@@ -42,17 +31,31 @@ WHERE @target.@id NOT IN (SELECT @id FROM @source)
                 id = primaryKey,
                 columns = string.Join(",", restOfColumns),
                 source = source,
-                columnUpdateList = string.Join(",", restOfColumns.Select(r => r + "=s." + r))
+                columnUpdateList = string.Join(",", restOfColumns.Select(r => r + "=s." + r)),
+                modifiedUser = settings.AuditColumns?.ModifiedUser,
+                modifiedDate = settings.AuditColumns?.ModifiedDate,
+                createdUser = settings.AuditColumns?.CreatedUser,
+                createdDate = settings.AuditColumns?.CreatedDate
             };
-            switch (mergeStrategy)
+            string sqlToUse = null;
+            switch (settings.MergeStrategy)
             {
                 case Strategy.MergeWithoutDelete:
-                    return mergeWithoutDeleteSQL.FormatWith(configObject);
+                    if (settings.UseAuditColumnsOnImport)
+                        sqlToUse =  mergeWithoutDeleteWithAuditSQL;
+                    else
+                        sqlToUse = mergeWithoutDeleteSQL;
+                    break;
                 case Strategy.MergeWithDelete:
-                    return mergeWithDeleteSQL.FormatWith(configObject);
+                    if (settings.UseAuditColumnsOnImport)
+                        sqlToUse = mergeWithDeleteWithAuditSQL;
+                    else
+                        sqlToUse = mergeWithDeleteSQL;
+                    break;
                 default:
                     throw new NotImplementedException("That merge strategy is not yet supported");
             }
+            return sqlToUse.FormatWith(configObject);
         }
     }
 }
