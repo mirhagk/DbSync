@@ -9,6 +9,13 @@ namespace DbSync
 {
     public class JobSettings
     {
+        public class AuditSettings
+        {
+            public string CreatedDate { get; set; }
+            public string CreatedUser { get; set; }
+            public string ModifiedDate { get; set; }
+            public string ModifiedUser { get; set; }
+        }
         public string ConnectionString { get; set; }
         [XmlArray(ElementName = "Tables")]
         [XmlArrayItem(ElementName = "Table")]
@@ -16,5 +23,7 @@ namespace DbSync
         public string Path { get; set; } = System.IO.Path.GetFullPath(".");
         public Merge.Strategy MergeStrategy { get; set; } = Merge.Strategy.MergeWithoutDelete;
         public string Name { get; set; }
+        public AuditSettings AuditColumns { get; set; }
+        public bool IgnoreAuditColumnsOnExport { get; set; } = false;
     }
 }

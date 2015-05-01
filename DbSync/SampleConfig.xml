@@ -9,5 +9,12 @@
     </Tables>
     <!--<Path>C:\Users\mirhagk\Documents\GitHub\DbSync\DbSync\bin\Debug</Path>-->
     <MergeStrategy>MergeWithDelete</MergeStrategy>
+    <AuditColumns>
+      <CreatedDate>CreatedDate</CreatedDate>
+      <CreatedUser>CreatedUser</CreatedUser>
+      <ModifiedDate>ModifiedDate</ModifiedDate>
+      <ModifiedUser>ModifiedUser</ModifiedUser>
+    </AuditColumns>
+    <IgnoreAuditColumnsOnExport>true</IgnoreAuditColumnsOnExport>
   </Job>
 </Settings>
