@@ -56,6 +56,10 @@ namespace DbSync
                                 writer.WriteStartElement("row");
                                 for (int i = 0; i < reader.FieldCount; i++)
                                 {
+                                    var fieldName = reader.GetName(i);
+                                    if (settings.IgnoreAuditColumnsOnExport && settings.IsAuditColumn(fieldName))
+                                        continue;
+
                                     writer.WriteAttributeString(reader.GetName(i), reader.GetValue(i).ToString());
                                 }
                                 writer.WriteEndElement();

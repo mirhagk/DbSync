@@ -25,5 +25,14 @@ namespace DbSync
         public string Name { get; set; }
         public AuditSettings AuditColumns { get; set; }
         public bool IgnoreAuditColumnsOnExport { get; set; } = false;
+
+        public bool IsAuditColumn(string fieldName)
+        {
+            var lowerCaseField = fieldName.ToLowerInvariant();
+            return AuditColumns?.ModifiedDate?.ToLowerInvariant() == lowerCaseField
+                || AuditColumns?.ModifiedUser?.ToLowerInvariant() == lowerCaseField
+                || AuditColumns?.CreatedDate?.ToLowerInvariant() == lowerCaseField
+                || AuditColumns?.CreatedUser?.ToLowerInvariant() == lowerCaseField;
+        }
     }
 }
