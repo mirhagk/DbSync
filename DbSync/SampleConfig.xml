@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Job>
-    <Name>Static Data</Name>
-    <ConnectionString>server=.;database=BusTap;Integrated Security=True;</ConnectionString>
+    <Name>Test Data</Name>
+    <ConnectionString>server=.;database=StudyBaseline;Integrated Security=True;</ConnectionString>
     <Tables>
-      <Table>Calendars</Table>
-      <Table>Stops</Table>
+      <Table>dbo.Organization</Table>
+      <Table>dbo.Centre</Table>
+      <Table>dbo.Depot</Table>
+      <Table>dbo.Treatment</Table>
+      <Table>dbo.Participant</Table>
+      <Table>dbo.Visit</Table>
+      <Table>dbo.Registration</Table>
     </Tables>
-    <!--<Path>C:\Users\mirhagk\Documents\GitHub\DbSync\DbSync\bin\Debug</Path>-->
+    <Path>.\Data</Path>
     <MergeStrategy>MergeWithDelete</MergeStrategy>
     <AuditColumns>
       <CreatedDate>CreatedDate</CreatedDate>
