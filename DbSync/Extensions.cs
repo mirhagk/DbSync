@@ -13,7 +13,7 @@ namespace DbSync
             var resultString = formatString;
             foreach (var property in typeof(T).GetProperties())
             {
-                resultString = resultString.Replace("@" + property.Name, property.GetValue(formatObject).ToString());
+                resultString = resultString.Replace("@" + property.Name, property.GetValue(formatObject)?.ToString());
             }
             return resultString;
         }
