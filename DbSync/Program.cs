@@ -27,6 +27,8 @@ namespace DbSync
         }
         static async Task Export(JobSettings settings)
         {
+            if (!Directory.Exists(settings.Path))
+                Directory.CreateDirectory(settings.Path);
             using (var conn = new SqlConnection(settings.ConnectionString))
             {
                 conn.Open();
