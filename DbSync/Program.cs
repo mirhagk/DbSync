@@ -129,6 +129,7 @@ ORDER BY column_id
         {
             public bool Import { get; set; }
             public bool Export { get; set; }
+            [PowerCommandParser.Required]
             public string Config { get; set; }
             public string Job { get; set; }
         }
@@ -153,6 +154,8 @@ ORDER BY column_id
         static void Main(string[] args)
         {
             var cmdArgs = PowerCommandParser.Parser.ParseArguments<CommandLineArguments>(args);
+            if (cmdArgs == null)
+                return;
             var serializer = new XmlSerializer(typeof(Settings));
             StreamReader configFileStream = new StreamReader(cmdArgs.Config);
 
