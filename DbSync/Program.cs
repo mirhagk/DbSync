@@ -146,7 +146,17 @@ ORDER BY column_id
             watch.Start();
 
             if (cmdArgs.Export)
-                Export(job).Wait();
+                try
+                {
+                    Export(job).Wait();
+                }
+                catch(AggregateException aggEx)
+                {
+                    foreach(var ex in aggEx.InnerExceptions)
+                    {
+                        Console.Error.WriteLine($"Job failed because of exception {ex.Message}");
+                    }
+                }
             if (cmdArgs.Import)
                 Import(job);
 
