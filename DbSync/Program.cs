@@ -182,6 +182,7 @@ ORDER BY column_id
                     Console.Error.WriteLine($"No job found that matches {cmdArgs.Job}");
                     return;
                 }
+                RunJob(selectedJob, cmdArgs);
             }
         }
     }
