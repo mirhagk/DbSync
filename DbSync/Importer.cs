@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace DbSync
 {
@@ -80,6 +81,36 @@ ORDER BY column_id
                         cmd.ExecuteNonQuery();
                     }
                 }
+            }
+        }
+        public string GenerateImportScript(JobSettings settings)
+        {
+            using (var conn = new SqlConnection(settings.ConnectionString))
+            {
+                conn.Open();
+                string script = "";
+
+                foreach (var table in settings.Tables)
+                {
+                    var fields = GetFields(table, conn);
+
+                    script += GetTempTableScript(table, fields) + "\n\n\n";
+
+                    var reader = new XmlRecordDataReader(Path.Combine(settings.Path, table), fields);
+                    XmlDocument doc = new XmlDocument();
+                    doc.Load(Path.Combine(settings.Path, table));
+
+                    var jsonData = Newtonsoft.Json.JsonConvert.SerializeXmlNode(doc);
+                    var data = Newtonsoft.Json.JsonConvert.DeserializeObject(jsonData);
+
+                    script += jsonData;
+
+                    var primaryKey = GetPrimaryKey(table, fields);
+                    var rest = GetNonPKOrAuditFields(table, fields, settings);
+
+                    script += Merge.GetSqlForMergeStrategy(settings, Get2PartName(table), "##" + Get1PartName(table), primaryKey, rest);
+                }
+                return script;
             }
         }
     }
