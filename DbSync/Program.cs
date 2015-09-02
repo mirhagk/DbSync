@@ -18,10 +18,12 @@ namespace DbSync
         class CommandLineArguments
         {
             public bool Import { get; set; }
+            public bool ImportScript { get; set; }
             public bool Export { get; set; }
             [PowerCommandParser.Required]
             public string Config { get; set; }
             public string Job { get; set; }
+            public string ImportScriptName { get; set; } = "ImportScript.sql";
         }
         public class Settings
         {
@@ -38,7 +40,7 @@ namespace DbSync
                 {
                     Exporter.Instance.Export(job).Wait();
                 }
-                catch(AggregateException aggEx)
+                catch(AggregateException aggEx) 
                 {
                     foreach(var ex in aggEx.InnerExceptions)
                     {
@@ -47,6 +49,8 @@ namespace DbSync
                 }
             if (cmdArgs.Import)
                 Importer.Instance.Import(job);
+            if (cmdArgs.ImportScript)
+                File.WriteAllText(cmdArgs.ImportScriptName,Importer.Instance.GenerateImportScript(job));
 
             watch.Stop();
             Console.WriteLine($"Executed job {job.Name}, Elapsed {watch.ElapsedMilliseconds}ms");
