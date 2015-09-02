@@ -18,7 +18,9 @@ namespace DbSync
         static string Get2PartName(string tableName)
         {
             if (!tableName.Contains("."))
-                return "dbo." + tableName;
+                return $"[dbo].[{tableName}]";
+            if (!tableName.Contains("["))
+                return $"[{tableName.Split('.')[0]}].[{tableName.Split('.')[1]}]";
             return tableName;
         }
         static string Get1PartName(string tableName)
