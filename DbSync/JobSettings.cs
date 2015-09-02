@@ -15,6 +15,13 @@ namespace DbSync
             public string CreatedUser { get; set; }
             public string ModifiedDate { get; set; }
             public string ModifiedUser { get; set; }
+            public IEnumerable<string> AuditColumnNames()
+            {
+                yield return CreatedDate;
+                yield return CreatedUser;
+                yield return ModifiedDate;
+                yield return ModifiedUser;
+            }
         }
         public string ConnectionString { get; set; }
         [XmlArray(ElementName = "Tables")]
