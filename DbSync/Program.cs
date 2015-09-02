@@ -118,7 +118,7 @@ ORDER BY column_id
 
                         bulkCopy.WriteToServer(reader);
 
-                        var primaryKey = fields.SingleOrDefault(f => f.ToLowerInvariant() == "id" || f.ToLowerInvariant().EndsWith("id"));
+                        var primaryKey = fields.SingleOrDefault(f => f.ToLowerInvariant() == "id" || f.ToLowerInvariant() == Get1PartName(table).ToLowerInvariant()+"id");
 
                         var rest = fields
                             .Where(f => f != primaryKey)
