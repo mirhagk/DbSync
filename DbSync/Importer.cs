@@ -13,16 +13,11 @@ namespace DbSync
     {
         public static Importer Instance = new Importer();
         private Importer() { }
-        public void Import(JobSettings settings)
+        List<string> GetFields(string table, SqlConnection connection)
         {
-            using (var conn = new SqlConnection(settings.ConnectionString))
+            using (var cmd = connection.CreateCommand())
             {
-                conn.Open();
-                foreach (var table in settings.Tables)
-                {
-                    using (var cmd = conn.CreateCommand())
-                    {
-                        cmd.CommandText = @"
+                cmd.CommandText = @"
 SELECT c.name 
 FROM sys.all_objects o
 LEFT JOIN sys.all_columns c ON o.object_id = c.object_id
@@ -30,18 +25,41 @@ WHERE o.name = '@table'
 ORDER BY column_id
 ".FormatWith(new { table = Get1PartName(table) });
 
-                        cmd.CommandType = CommandType.Text;
-                        var sqlReader = cmd.ExecuteReader();
+                cmd.CommandType = CommandType.Text;
+                var sqlReader = cmd.ExecuteReader();
 
-                        var fields = new List<string>();
+                var fields = new List<string>();
 
-                        while (sqlReader.Read())
-                        {
-                            fields.Add(sqlReader.GetString(0));
-                        }
-                        sqlReader.Close();
+                while (sqlReader.Read())
+                {
+                    fields.Add(sqlReader.GetString(0));
+                }
+                sqlReader.Close();
+                return fields;
+            }
 
-                        cmd.CommandText = "CREATE TABLE ##" + Get1PartName(table) + "( " + string.Join(", ", fields.Select(f => f + " NVARCHAR(MAX) NULL")) + ")";
+        }
+        string GetTempTableScript(string table, List<string> fields) 
+            => "CREATE TABLE ##" + Get1PartName(table) + "( " + string.Join(", ", fields.Select(f => f + " NVARCHAR(MAX) NULL")) + ")";
+        string GetPrimaryKey(string table, List<string> fields) 
+            => fields.SingleOrDefault(f => f.ToLowerInvariant() == "id" || f.ToLowerInvariant() == Get1PartName(table).ToLowerInvariant() + "id");
+        List<string> GetNonPKOrAuditFields(string table, List<string> fields, JobSettings settings)
+            => fields
+                .Where(f => f != GetPrimaryKey(table, fields))
+                .Where(r => !settings.AuditColumns.AuditColumnNames().Contains(r))
+                .ToList();
+        public void Import(JobSettings settings)
+        {
+            using (var conn = new SqlConnection(settings.ConnectionString))
+            {
+                conn.Open();
+                foreach (var table in settings.Tables)
+                {
+                    var fields = GetFields(table, conn);
+
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = GetTempTableScript(table, fields);
                         cmd.ExecuteNonQuery();
 
                         var reader = new XmlRecordDataReader(Path.Combine(settings.Path, table), fields);
@@ -53,12 +71,9 @@ ORDER BY column_id
 
                         bulkCopy.WriteToServer(reader);
 
-                        var primaryKey = fields.SingleOrDefault(f => f.ToLowerInvariant() == "id" || f.ToLowerInvariant() == Get1PartName(table).ToLowerInvariant() + "id");
+                        var primaryKey = GetPrimaryKey(table, fields);
 
-                        var rest = fields
-                            .Where(f => f != primaryKey)
-                            .Where(r => !settings.AuditColumns.AuditColumnNames().Contains(r))
-                            .ToList();
+                        var rest = GetNonPKOrAuditFields(table, fields, settings);
 
                         cmd.CommandText = Merge.GetSqlForMergeStrategy(settings, Get2PartName(table), "##" + Get1PartName(table), primaryKey, rest);
 
