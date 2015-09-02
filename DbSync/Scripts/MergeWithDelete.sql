@@ -4,14 +4,16 @@ FROM @target t
 INNER JOIN @source s ON t.@id = s.@id
 
 
-SET IDENTITY_INSERT @target ON
+IF OBJECTPROPERTY(OBJECT_ID('@target'), 'TableHasIdentity') = 1
+	SET IDENTITY_INSERT @target ON
 
 INSERT INTO @target (@id, @columns)
 SELECT @id, @columns
 FROM @source s
 WHERE s.@id NOT IN (SELECT @id FROM @target t)
 
-SET IDENTITY_INSERT @target OFF
+IF OBJECTPROPERTY(OBJECT_ID('@target'), 'TableHasIdentity') = 1
+	SET IDENTITY_INSERT @target OFF
 
 DELETE FROM @target
 WHERE @target.@id NOT IN (SELECT @id FROM @source)
