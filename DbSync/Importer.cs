@@ -124,8 +124,13 @@ AND table_name = '{Get1PartName(table)}'";
 
 
                     script += "INSERT INTO ##" + Get1PartName(table) + " (" + string.Join(",", columns)+")\nVALUES\n";
+                    bool isFirst = true;
                     foreach (var row in (rows as JArray)?.ToArray() ?? new JObject[] { rows as JObject })
                     {
+                        if (isFirst)
+                            isFirst = false;
+                        else
+                            script += ",";
                         script += "("+string.Join(", ", columns.Select(f => GetSQLLiteral(row["@" + f].Value<string>())))+")\n";
                     }
                     
