@@ -42,7 +42,10 @@ ORDER BY column_id
 
         }
         string GetTempTableScript(string table, List<string> fields) 
-            => "CREATE TABLE ##" + Get1PartName(table) + "( " + string.Join(", ", fields.Select(f => f + " NVARCHAR(MAX) NULL")) + ")";
+            => $@"IF OBJECT_ID('tempdb..##{Get1PartName(table)}') IS NOT NULL
+	DROP TABLE ##{Get1PartName(table)}
+
+CREATE TABLE ##{Get1PartName(table)}( " + string.Join(", ", fields.Select(f => f + " NVARCHAR(MAX) NULL")) + ")";
         string GetPrimaryKey(string table, List<string> fields) 
             => fields.SingleOrDefault(f => f.ToLowerInvariant() == "id" || f.ToLowerInvariant() == Get1PartName(table).ToLowerInvariant() + "id");
         List<string> GetNonPKOrAuditFields(List<string> fields, string primaryKey, JobSettings settings)
@@ -131,7 +134,7 @@ AND table_name = '{Get1PartName(table)}'";
                             isFirst = false;
                         else
                             script += ",";
-                        script += "("+string.Join(", ", columns.Select(f => GetSQLLiteral(row["@" + f].Value<string>())))+")\n";
+                        script += "("+string.Join(", ", columns.Select(f => GetSQLLiteral(row["@" + f]?.Value<string>())))+")\n";
                     }
                     
                     var rest = GetNonPKOrAuditFields(fields, primaryKey, settings);
