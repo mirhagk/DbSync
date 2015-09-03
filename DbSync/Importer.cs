@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -44,11 +45,22 @@ ORDER BY column_id
             => "CREATE TABLE ##" + Get1PartName(table) + "( " + string.Join(", ", fields.Select(f => f + " NVARCHAR(MAX) NULL")) + ")";
         string GetPrimaryKey(string table, List<string> fields) 
             => fields.SingleOrDefault(f => f.ToLowerInvariant() == "id" || f.ToLowerInvariant() == Get1PartName(table).ToLowerInvariant() + "id");
-        List<string> GetNonPKOrAuditFields(string table, List<string> fields, JobSettings settings)
+        List<string> GetNonPKOrAuditFields(List<string> fields, string primaryKey, JobSettings settings)
             => fields
-                .Where(f => f != GetPrimaryKey(table, fields))
+                .Where(f => f != primaryKey)
                 .Where(r => !settings.AuditColumns.AuditColumnNames().Contains(r))
                 .ToList();
+        string LoadPrimaryKey(string table, SqlConnection conn)
+        {
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = $@"SELECT column_name
+FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+WHERE OBJECTPROPERTY(OBJECT_ID(constraint_name), 'IsPrimaryKey') = 1
+AND table_name = '{Get1PartName(table)}'";
+                return cmd.ExecuteScalar() as string;
+            }
+        }
         public void Import(JobSettings settings)
         {
             using (var conn = new SqlConnection(settings.ConnectionString))
@@ -74,7 +86,7 @@ ORDER BY column_id
 
                         var primaryKey = GetPrimaryKey(table, fields);
 
-                        var rest = GetNonPKOrAuditFields(table, fields, settings);
+                        var rest = GetNonPKOrAuditFields(fields, primaryKey, settings);
 
                         cmd.CommandText = Merge.GetSqlForMergeStrategy(settings, Get2PartName(table), "##" + Get1PartName(table), primaryKey, rest);
 
@@ -83,6 +95,7 @@ ORDER BY column_id
                 }
             }
         }
+        string GetSQLLiteral(string value) => value == null ? "NULL" : $"'{value}'";
         public string GenerateImportScript(JobSettings settings)
         {
             using (var conn = new SqlConnection(settings.ConnectionString))
@@ -101,12 +114,22 @@ ORDER BY column_id
                     doc.Load(Path.Combine(settings.Path, table));
 
                     var jsonData = Newtonsoft.Json.JsonConvert.SerializeXmlNode(doc);
-                    var data = Newtonsoft.Json.JsonConvert.DeserializeObject(jsonData);
+                    var data = Newtonsoft.Json.JsonConvert.DeserializeObject(jsonData) as JObject;
 
-                    script += jsonData;
+                    var rows = data["root"]["row"];
 
-                    var primaryKey = GetPrimaryKey(table, fields);
-                    var rest = GetNonPKOrAuditFields(table, fields, settings);
+                    var primaryKey = LoadPrimaryKey(table, conn);
+
+                    var columns = new string[] { primaryKey }.Concat(GetNonPKOrAuditFields(fields, primaryKey, settings)).ToList();
+
+
+                    script += "INSERT INTO ##" + Get1PartName(table) + " (" + string.Join(",", columns)+")\nVALUES\n";
+                    foreach (var row in (rows as JArray)?.ToArray() ?? new JObject[] { rows as JObject })
+                    {
+                        script += "("+string.Join(", ", columns.Select(f => GetSQLLiteral(row["@" + f].Value<string>())))+")\n";
+                    }
+                    
+                    var rest = GetNonPKOrAuditFields(fields, primaryKey, settings);
 
                     script += Merge.GetSqlForMergeStrategy(settings, Get2PartName(table), "##" + Get1PartName(table), primaryKey, rest);
                 }
