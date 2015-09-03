@@ -50,7 +50,8 @@ namespace DbSync
                                     var fieldName = reader.GetName(i);
                                     if (settings.IgnoreAuditColumnsOnExport && settings.IsAuditColumn(fieldName))
                                         continue;
-
+                                    if (reader.IsDBNull(i))//for null values just don't output the attribute at all
+                                        continue;
                                     writer.WriteAttributeString(reader.GetName(i), reader.GetValue(i).ToString());
                                 }
                                 writer.WriteEndElement();
