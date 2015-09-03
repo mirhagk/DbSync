@@ -87,7 +87,7 @@ AND table_name = '{Get1PartName(table)}'";
 
                         bulkCopy.WriteToServer(reader);
 
-                        var primaryKey = GetPrimaryKey(table, fields);
+                        var primaryKey = LoadPrimaryKey(table, conn);
 
                         var rest = GetNonPKOrAuditFields(fields, primaryKey, settings);
 
