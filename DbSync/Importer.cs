@@ -11,7 +11,7 @@ using System.Xml;
 
 namespace DbSync
 {
-    class Importer:Transfer
+    class Importer : Transfer
     {
         public static Importer Instance = new Importer();
         private Importer() { }
@@ -41,12 +41,12 @@ ORDER BY column_id
             }
 
         }
-        string GetTempTableScript(string table, List<string> fields) 
+        string GetTempTableScript(string table, List<string> fields)
             => $@"IF OBJECT_ID('tempdb..##{Get1PartName(table)}') IS NOT NULL
 	DROP TABLE ##{Get1PartName(table)}
 
 CREATE TABLE ##{Get1PartName(table)}( " + string.Join(", ", fields.Select(f => $"[{f}] NVARCHAR(MAX) NULL")) + ")";
-        string GetPrimaryKey(string table, List<string> fields) 
+        string GetPrimaryKey(string table, List<string> fields)
             => fields.SingleOrDefault(f => f.ToLowerInvariant() == "id" || f.ToLowerInvariant() == Get1PartName(table).ToLowerInvariant() + "id");
         List<string> GetNonPKOrAuditFields(List<string> fields, string primaryKey, JobSettings settings)
             => fields
@@ -90,7 +90,7 @@ AND table_name = '{Get1PartName(table)}'";
 
                         var primaryKey = LoadPrimaryKey(table, conn);
 
-                        if (primaryKey== null)
+                        if (primaryKey == null)
                             throw new DbSyncException($"No primary key found for table {table}");
 
                         var rest = GetNonPKOrAuditFields(fields, primaryKey, settings);
@@ -133,7 +133,7 @@ AND table_name = '{Get1PartName(table)}'";
                     var columns = new string[] { primaryKey }.Concat(GetNonPKOrAuditFields(fields, primaryKey, settings)).ToList();
 
 
-                    script += "INSERT INTO ##" + Get1PartName(table) + " (" + string.Join(",", columns)+")\nVALUES\n";
+                    script += "INSERT INTO ##" + Get1PartName(table) + " (" + string.Join(",", columns) + ")\nVALUES\n";
                     bool isFirst = true;
                     foreach (var row in (rows as JArray)?.ToArray() ?? new JObject[] { rows as JObject })
                     {
@@ -141,9 +141,9 @@ AND table_name = '{Get1PartName(table)}'";
                             isFirst = false;
                         else
                             script += ",";
-                        script += "("+string.Join(", ", columns.Select(f => GetSQLLiteral(row["@" + f]?.Value<string>())))+")\n";
+                        script += "(" + string.Join(", ", columns.Select(f => GetSQLLiteral(row["@" + f]?.Value<string>()))) + ")\n";
                     }
-                    
+
                     var rest = GetNonPKOrAuditFields(fields, primaryKey, settings);
 
                     script += Merge.GetSqlForMergeStrategy(settings, Get2PartName(table), "##" + Get1PartName(table), primaryKey, rest);
