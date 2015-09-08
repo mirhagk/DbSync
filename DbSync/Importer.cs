@@ -45,7 +45,7 @@ ORDER BY column_id
             => $@"IF OBJECT_ID('tempdb..##{Get1PartName(table)}') IS NOT NULL
 	DROP TABLE ##{Get1PartName(table)}
 
-CREATE TABLE ##{Get1PartName(table)}( " + string.Join(", ", fields.Select(f => f + " NVARCHAR(MAX) NULL")) + ")";
+CREATE TABLE ##{Get1PartName(table)}( " + string.Join(", ", fields.Select(f => $"[{f}] NVARCHAR(MAX) NULL")) + ")";
         string GetPrimaryKey(string table, List<string> fields) 
             => fields.SingleOrDefault(f => f.ToLowerInvariant() == "id" || f.ToLowerInvariant() == Get1PartName(table).ToLowerInvariant() + "id");
         List<string> GetNonPKOrAuditFields(List<string> fields, string primaryKey, JobSettings settings)
@@ -71,6 +71,7 @@ AND table_name = '{Get1PartName(table)}'";
                 conn.Open();
                 foreach (var table in settings.Tables)
                 {
+                    Console.WriteLine($"Importing table {table}");
                     var fields = GetFields(table, conn);
 
                     using (var cmd = conn.CreateCommand())
@@ -89,9 +90,14 @@ AND table_name = '{Get1PartName(table)}'";
 
                         var primaryKey = LoadPrimaryKey(table, conn);
 
+                        if (primaryKey== null)
+                            throw new DbSyncException($"No primary key found for table {table}");
+
                         var rest = GetNonPKOrAuditFields(fields, primaryKey, settings);
 
                         cmd.CommandText = Merge.GetSqlForMergeStrategy(settings, Get2PartName(table), "##" + Get1PartName(table), primaryKey, rest);
+
+                        cmd.CommandTimeout = 120;
 
                         cmd.ExecuteNonQuery();
                     }
@@ -108,6 +114,7 @@ AND table_name = '{Get1PartName(table)}'";
 
                 foreach (var table in settings.Tables)
                 {
+                    Console.WriteLine($"Generating import script for {table}");
                     var fields = GetFields(table, conn);
 
                     script += GetTempTableScript(table, fields) + "\n\n\n";
