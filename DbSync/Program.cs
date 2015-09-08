@@ -35,23 +35,33 @@ namespace DbSync
             System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
             watch.Start();
 
-            if (cmdArgs.Export)
-                try
-                {
-                    Exporter.Instance.Export(job).Wait();
-                }
-                catch(AggregateException aggEx) 
-                {
-                    foreach(var ex in aggEx.InnerExceptions)
+            try
+            {
+                if (cmdArgs.Export)
+                    try
                     {
-                        Console.Error.WriteLine($"Job failed because of exception {ex.Message}");
+                        Exporter.Instance.Export(job).Wait();
                     }
-                }
-            if (cmdArgs.Import)
-                Importer.Instance.Import(job);
-            if (cmdArgs.ImportScript)
-                File.WriteAllText(cmdArgs.ImportScriptName,Importer.Instance.GenerateImportScript(job));
-
+                    catch (AggregateException aggEx)
+                    {
+                        foreach (var ex in aggEx.InnerExceptions)
+                        {
+                            Console.Error.WriteLine($"Job failed because of exception {ex.Message}");
+                        }
+                    }
+                if (cmdArgs.Import)
+                    Importer.Instance.Import(job);
+                if (cmdArgs.ImportScript)
+                    File.WriteAllText(cmdArgs.ImportScriptName, Importer.Instance.GenerateImportScript(job));
+            }
+            catch(DbSyncException ex)
+            {
+                var foregroundColor = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Error.WriteLine($"Job failed because of error: {ex.Message}");
+                Console.ForegroundColor = foregroundColor;
+                Console.ReadKey();
+            }
             watch.Stop();
             Console.WriteLine($"Executed job {job.Name}, Elapsed {watch.ElapsedMilliseconds}ms");
         }
