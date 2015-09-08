@@ -29,9 +29,9 @@ namespace DbSync
             {
                 target = target,
                 id = primaryKey,
-                columns = string.Join(",", restOfColumns),
+                columns = string.Join(",", restOfColumns.Select(c=>$"[{c}]")),
                 source = source,
-                columnUpdateList = string.Join(",", restOfColumns.Select(r => r + "=s." + r)),
+                columnUpdateList = string.Join(",", restOfColumns.Select(r => $"[{r}]=s.[{r}]")),
                 modifiedUser = settings.AuditColumns?.ModifiedUser,
                 modifiedDate = settings.AuditColumns?.ModifiedDate,
                 createdUser = settings.AuditColumns?.CreatedUser,
