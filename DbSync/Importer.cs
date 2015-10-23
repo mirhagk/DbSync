@@ -15,58 +15,14 @@ namespace DbSync
     {
         public static Importer Instance = new Importer();
         private Importer() { }
-        List<string> GetFields(string table, SqlConnection connection)
+        string GetTempTableScript(Table table)
         {
-            using (var cmd = connection.CreateCommand())
-            {
-                cmd.CommandText = @"
-SELECT c.name 
-FROM sys.all_objects o
-LEFT JOIN sys.all_columns c ON o.object_id = c.object_id
-WHERE o.name = '@table'
-ORDER BY column_id
-".FormatWith(new { table = Get1PartName(table) });
+            return $@"IF OBJECT_ID('tempdb..##{table.BasicName}') IS NOT NULL
+	DROP TABLE ##{table.BasicName}
 
-                cmd.CommandType = CommandType.Text;
-                var sqlReader = cmd.ExecuteReader();
-
-                var fields = new List<string>();
-
-                while (sqlReader.Read())
-                {
-                    fields.Add(sqlReader.GetString(0));
-                }
-                sqlReader.Close();
-                return fields;
-            }
-
+CREATE TABLE ##{table.BasicName}( " + string.Join(", ", table.Fields.Select(f => $"[{f}] NVARCHAR(MAX) NULL")) + ")";
         }
-        string GetTempTableScript(string table, List<string> fields)
-        {
-            return $@"IF OBJECT_ID('tempdb..##{Get1PartName(table)}') IS NOT NULL
-	DROP TABLE ##{Get1PartName(table)}
-
-CREATE TABLE ##{Get1PartName(table)}( " + string.Join(", ", fields.Select(f => $"[{f}] NVARCHAR(MAX) NULL")) + ")";
-        }
-        string GetPrimaryKey(string table, List<string> fields)
-            => fields.SingleOrDefault(f => f.ToLowerInvariant() == "id" || f.ToLowerInvariant() == Get1PartName(table).ToLowerInvariant() + "id");
-        List<string> GetNonPKOrAuditFields(List<string> fields, string primaryKey, JobSettings settings)
-            => fields
-                .Where(f => f != primaryKey)
-                .Where(r => !settings.AuditColumns.AuditColumnNames().Contains(r))
-                .ToList();
-        string LoadPrimaryKey(string table, SqlConnection conn)
-        {
-            using (var cmd = conn.CreateCommand())
-            {
-                cmd.CommandText = $@"SELECT column_name
-FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-WHERE OBJECTPROPERTY(OBJECT_ID(constraint_name), 'IsPrimaryKey') = 1
-AND table_name = '{Get1PartName(table)}'";
-                return cmd.ExecuteScalar() as string;
-            }
-        }
-        private void CopyFromFileToTable(SqlConnection connection, string file, string table, List<string> fields)
+        void CopyFromFileToTable(SqlConnection connection, string file, string table, List<string> fields)
         {
             var reader = new XmlRecordDataReader(file, fields);
 
@@ -90,7 +46,7 @@ AND table_name = '{Get1PartName(table)}'";
 
                     using (var cmd = conn.CreateCommand())
                     {
-                        cmd.CommandText = GetTempTableScript(table.Name, fields);
+                        cmd.CommandText = GetTempTableScript(table);
                         cmd.ExecuteNonQuery();
 
                         CopyFromFileToTable(conn, Path.Combine(settings.Path, table.Name), "##" + table.BasicName, table.Fields);
@@ -123,28 +79,30 @@ AND table_name = '{Get1PartName(table)}'";
                 conn.Open();
                 string script = "";
 
-                foreach (var table in settings.Tables.Select(t=>t.Name))
+                foreach (var table in settings.Tables)
                 {
+                    table.Initialize(conn, settings);
+
                     Console.WriteLine($"Generating import script for {table}");
-                    var fields = GetFields(table, conn);
+                    var fields = table.Fields;
 
-                    script += GetTempTableScript(table, fields) + "\n\n\n";
+                    script += GetTempTableScript(table) + "\n\n\n";
 
-                    var reader = new XmlRecordDataReader(Path.Combine(settings.Path, table), fields);
+                    var reader = new XmlRecordDataReader(Path.Combine(settings.Path, table.Name), fields);
                     XmlDocument doc = new XmlDocument();
-                    doc.Load(Path.Combine(settings.Path, table));
+                    doc.Load(Path.Combine(settings.Path, table.Name));
 
                     var jsonData = Newtonsoft.Json.JsonConvert.SerializeXmlNode(doc);
                     var data = Newtonsoft.Json.JsonConvert.DeserializeObject(jsonData) as JObject;
 
                     var rows = data["root"]["row"];
 
-                    var primaryKey = LoadPrimaryKey(table, conn);
+                    var primaryKey = table.PrimaryKey;
 
-                    var columns = new string[] { primaryKey }.Concat(GetNonPKOrAuditFields(fields, primaryKey, settings)).ToList();
+                    var columns = new string[] { table.PrimaryKey }.Concat(table.DataFields).ToList();
 
 
-                    script += "INSERT INTO ##" + Get1PartName(table) + " (" + string.Join(",", columns) + ")\nVALUES\n";
+                    script += "INSERT INTO ##" + table.BasicName + " (" + string.Join(",", columns) + ")\nVALUES\n";
                     bool isFirst = true;
                     foreach (var row in (rows as JArray)?.ToArray() ?? new JObject[] { rows as JObject })
                     {
@@ -155,9 +113,9 @@ AND table_name = '{Get1PartName(table)}'";
                         script += "(" + string.Join(", ", columns.Select(f => GetSQLLiteral(row["@" + f]?.Value<string>()))) + ")\n";
                     }
 
-                    var rest = GetNonPKOrAuditFields(fields, primaryKey, settings);
+                    var rest = table.DataFields;
 
-                    script += Merge.GetSqlForMergeStrategy(settings, Get2PartName(table), "##" + Get1PartName(table), primaryKey, rest);
+                    script += Merge.GetSqlForMergeStrategy(settings, table.QualifiedName, "##" + table.BasicName, primaryKey, rest);
                 }
                 return script;
             }
