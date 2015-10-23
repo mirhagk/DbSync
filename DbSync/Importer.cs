@@ -72,7 +72,37 @@ CREATE TABLE ##{table.BasicName}( " + string.Join(", ", table.Fields.Select(f =>
             }
         }
         string GetSQLLiteral(string value) => value == null ? "NULL" : $"'{value}'";
-        public string GenerateImportScript(JobSettings settings)
+        string ImportScriptForFile(Table table, string file)
+        {
+            string result = "";
+
+            XmlDocument doc = new XmlDocument();
+            doc.Load(file);
+
+            var jsonData = Newtonsoft.Json.JsonConvert.SerializeXmlNode(doc);
+            var data = Newtonsoft.Json.JsonConvert.DeserializeObject(jsonData) as JObject;
+
+            var rows = data["root"]["row"];
+
+            var primaryKey = table.PrimaryKey;
+
+            var columns = new string[] { table.PrimaryKey }.Concat(table.DataFields).ToList();
+
+
+            result += "INSERT INTO ##" + table.BasicName + " (" + string.Join(",", columns) + ")\nVALUES\n";
+            bool isFirst = true;
+            foreach (var row in (rows as JArray)?.ToArray() ?? new JObject[] { rows as JObject })
+            {
+                if (isFirst)
+                    isFirst = false;
+                else
+                    result += ",";
+                result += "(" + string.Join(", ", columns.Select(f => GetSQLLiteral(row["@" + f]?.Value<string>()))) + ")\n";
+            }
+
+            return result;
+        }
+        public string GenerateImportScript(JobSettings settings, string environment)
         {
             using (var conn = new SqlConnection(settings.ConnectionString))
             {
@@ -87,35 +117,19 @@ CREATE TABLE ##{table.BasicName}( " + string.Join(", ", table.Fields.Select(f =>
                     var fields = table.Fields;
 
                     script += GetTempTableScript(table) + "\n\n\n";
-
-                    var reader = new XmlRecordDataReader(Path.Combine(settings.Path, table.Name), fields);
-                    XmlDocument doc = new XmlDocument();
-                    doc.Load(Path.Combine(settings.Path, table.Name));
-
-                    var jsonData = Newtonsoft.Json.JsonConvert.SerializeXmlNode(doc);
-                    var data = Newtonsoft.Json.JsonConvert.DeserializeObject(jsonData) as JObject;
-
-                    var rows = data["root"]["row"];
-
-                    var primaryKey = table.PrimaryKey;
-
-                    var columns = new string[] { table.PrimaryKey }.Concat(table.DataFields).ToList();
+                    
+                    script += ImportScriptForFile(table, Path.Combine(settings.Path, table.Name));
 
 
-                    script += "INSERT INTO ##" + table.BasicName + " (" + string.Join(",", columns) + ")\nVALUES\n";
-                    bool isFirst = true;
-                    foreach (var row in (rows as JArray)?.ToArray() ?? new JObject[] { rows as JObject })
+                    if (table.IsEnvironmentSpecific)
                     {
-                        if (isFirst)
-                            isFirst = false;
-                        else
-                            script += ",";
-                        script += "(" + string.Join(", ", columns.Select(f => GetSQLLiteral(row["@" + f]?.Value<string>()))) + ")\n";
+                        var enviroFile = Path.Combine(settings.Path, table.Name) + "." + environment;
+                        if (File.Exists(enviroFile))
+                            script += ImportScriptForFile(table, enviroFile);
                     }
 
-                    var rest = table.DataFields;
 
-                    script += Merge.GetSqlForMergeStrategy(settings, table.QualifiedName, "##" + table.BasicName, primaryKey, rest);
+                    script += Merge.GetSqlForMergeStrategy(settings, table.QualifiedName, "##" + table.BasicName, table.PrimaryKey, table.DataFields);
                 }
                 return script;
             }

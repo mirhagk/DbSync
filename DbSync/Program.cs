@@ -44,7 +44,7 @@ namespace DbSync
                 if (cmdArgs.Import)
                     Importer.Instance.Import(job, cmdArgs.Environment);
                 if (cmdArgs.ImportScript)
-                    File.WriteAllText(cmdArgs.ImportScriptName, Importer.Instance.GenerateImportScript(job));
+                    File.WriteAllText(cmdArgs.ImportScriptName, Importer.Instance.GenerateImportScript(job, cmdArgs.Environment));
             }
             catch(DbSyncException ex)
             {
