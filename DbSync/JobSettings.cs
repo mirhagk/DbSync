@@ -23,11 +23,6 @@ namespace DbSync
                 yield return ModifiedUser;
             }
         }
-        public class Table
-        {
-            [XmlText]
-            public string Name { get; set; }
-        }
         public string ConnectionString { get; set; }
         [XmlArray(ElementName = "Tables")]
         [XmlArrayItem(ElementName = "Table")]

@@ -71,33 +71,34 @@ AND table_name = '{Get1PartName(table)}'";
             using (var conn = new SqlConnection(settings.ConnectionString))
             {
                 conn.Open();
-                foreach (var table in settings.Tables.Select(t=>t.Name))
+                foreach (var table in settings.Tables)
                 {
-                    Console.WriteLine($"Importing table {table}");
-                    var fields = GetFields(table, conn);
+                    table.Initialize(conn);
+                    Console.WriteLine($"Importing table {table.Name}");
+                    var fields = GetFields(table.Name, conn);
 
                     using (var cmd = conn.CreateCommand())
                     {
-                        cmd.CommandText = GetTempTableScript(table, fields);
+                        cmd.CommandText = GetTempTableScript(table.Name, fields);
                         cmd.ExecuteNonQuery();
 
-                        var reader = new XmlRecordDataReader(Path.Combine(settings.Path, table), fields);
+                        var reader = new XmlRecordDataReader(Path.Combine(settings.Path, table.Name), fields);
 
                         SqlBulkCopy bulkCopy = new SqlBulkCopy(conn);
                         bulkCopy.BulkCopyTimeout = 120;
-                        bulkCopy.DestinationTableName = "##" + Get1PartName(table);
+                        bulkCopy.DestinationTableName = "##" + Get1PartName(table.Name);
                         bulkCopy.EnableStreaming = true;
 
                         bulkCopy.WriteToServer(reader);
 
-                        var primaryKey = LoadPrimaryKey(table, conn);
+                        var primaryKey = LoadPrimaryKey(table.Name, conn);
 
                         if (primaryKey == null)
                             throw new DbSyncException($"No primary key found for table {table}");
 
                         var rest = GetNonPKOrAuditFields(fields, primaryKey, settings);
 
-                        cmd.CommandText = Merge.GetSqlForMergeStrategy(settings, Get2PartName(table), "##" + Get1PartName(table), primaryKey, rest);
+                        cmd.CommandText = Merge.GetSqlForMergeStrategy(settings, Get2PartName(table.Name), "##" + Get1PartName(table.Name), primaryKey, rest);
 
                         cmd.CommandTimeout = 120;
 
