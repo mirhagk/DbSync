@@ -24,6 +24,8 @@ namespace DbSync
             public string Config { get; set; }
             public string Job { get; set; }
             public string ImportScriptName { get; set; } = "ImportScript.sql";
+            public string Environment { get; set; } = "local";
+            public string WorkingDirectory { get; set; }
         }
         public class Settings
         {
@@ -70,6 +72,9 @@ namespace DbSync
             var cmdArgs = PowerCommandParser.Parser.ParseArguments<CommandLineArguments>(args);
             if (cmdArgs == null)
                 return;
+            if (cmdArgs.WorkingDirectory != null)
+                Directory.SetCurrentDirectory(cmdArgs.WorkingDirectory);
+
             var serializer = new XmlSerializer(typeof(Settings));
             StreamReader configFileStream = new StreamReader(cmdArgs.Config);
 
