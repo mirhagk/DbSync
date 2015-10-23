@@ -42,10 +42,12 @@ ORDER BY column_id
 
         }
         string GetTempTableScript(string table, List<string> fields)
-            => $@"IF OBJECT_ID('tempdb..##{Get1PartName(table)}') IS NOT NULL
+        {
+            return $@"IF OBJECT_ID('tempdb..##{Get1PartName(table)}') IS NOT NULL
 	DROP TABLE ##{Get1PartName(table)}
 
 CREATE TABLE ##{Get1PartName(table)}( " + string.Join(", ", fields.Select(f => $"[{f}] NVARCHAR(MAX) NULL")) + ")";
+        }
         string GetPrimaryKey(string table, List<string> fields)
             => fields.SingleOrDefault(f => f.ToLowerInvariant() == "id" || f.ToLowerInvariant() == Get1PartName(table).ToLowerInvariant() + "id");
         List<string> GetNonPKOrAuditFields(List<string> fields, string primaryKey, JobSettings settings)
@@ -69,7 +71,7 @@ AND table_name = '{Get1PartName(table)}'";
             using (var conn = new SqlConnection(settings.ConnectionString))
             {
                 conn.Open();
-                foreach (var table in settings.Tables)
+                foreach (var table in settings.Tables.Select(t=>t.Name))
                 {
                     Console.WriteLine($"Importing table {table}");
                     var fields = GetFields(table, conn);
@@ -112,7 +114,7 @@ AND table_name = '{Get1PartName(table)}'";
                 conn.Open();
                 string script = "";
 
-                foreach (var table in settings.Tables)
+                foreach (var table in settings.Tables.Select(t=>t.Name))
                 {
                     Console.WriteLine($"Generating import script for {table}");
                     var fields = GetFields(table, conn);

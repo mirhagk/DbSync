@@ -21,7 +21,7 @@ namespace DbSync
             using (var conn = new SqlConnection(settings.ConnectionString))
             {
                 conn.Open();
-                foreach (var table in settings.Tables)
+                foreach (var table in settings.Tables.Select(t=>t.Name))
                 {
                     using (var cmd = conn.CreateCommand())
                     {
