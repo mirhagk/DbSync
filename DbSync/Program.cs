@@ -25,6 +25,7 @@ namespace DbSync
             public string Job { get; set; }
             public string ImportScriptName { get; set; } = "ImportScript.sql";
             public string Environment { get; set; } = "local";
+            public string ConnectionString { get; set; }
             public string WorkingDirectory { get; set; }
         }
         public class Settings
@@ -69,8 +70,10 @@ namespace DbSync
             StreamReader configFileStream = new StreamReader(cmdArgs.Config);
 
             var settings = (Settings)serializer.Deserialize(configFileStream);
+            if (cmdArgs.ConnectionString != null)
+                settings.Jobs.ForEach(j => j.ConnectionString = cmdArgs.ConnectionString);
 
-            if (settings.Jobs.Count == 0)
+                if (settings.Jobs.Count == 0)
             {
                 Console.Error.WriteLine("Must specify at least one job in the config file");
                 return;
