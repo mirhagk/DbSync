@@ -21,9 +21,11 @@ namespace DbSync
         #endregion
 
         SqlConnection connection;
-        public void Initialize(SqlConnection connection)
+        JobSettings settings;
+        public void Initialize(SqlConnection connection, JobSettings settings)
         {
             this.connection = connection;
+            this.settings = settings;
         }
 
         public string BasicName
@@ -46,7 +48,7 @@ namespace DbSync
             }
         }
         List<string> fields;
-        public IEnumerable<string> Fields
+        public List<string> Fields
         {
             get
             {
@@ -65,15 +67,49 @@ ORDER BY column_id
                     cmd.CommandType = CommandType.Text;
                     var sqlReader = cmd.ExecuteReader();
 
-                    var fields = new List<string>();
+                    fields = new List<string>();
 
                     while (sqlReader.Read())
                     {
-                        fields.Add(sqlReader.GetString(0));
+                        var field = sqlReader.GetString(0);
+
+                        fields.Add(field);
                     }
                     sqlReader.Close();
                     return fields;
                 }
+            }
+        }
+        List<string> dataFields;
+        public List<string> DataFields
+        {
+            get
+            {
+                if (dataFields != null)
+                    return dataFields;
+
+                var data = Fields
+                    .Where(f => f != PrimaryKey)
+                    .Where(f => !settings.AuditColumns.AuditColumnNames().Contains(f));
+
+                if (IsEnvironmentSpecific)
+                    data = data.Where(f => f.ToLowerInvariant() != "isenvironmentspecific");
+
+                dataFields = data.ToList();
+
+                return dataFields;
+            }
+        }
+        string primaryKey;
+        public string PrimaryKey
+        {
+            get
+            {
+                if (primaryKey != null)
+                    return primaryKey;
+
+                primaryKey = Fields.SingleOrDefault(f => f.ToLowerInvariant() == "id" || f.ToLowerInvariant() == BasicName.ToLowerInvariant() + "id");
+                return primaryKey;
             }
         }
     }

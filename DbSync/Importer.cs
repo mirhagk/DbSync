@@ -73,9 +73,9 @@ AND table_name = '{Get1PartName(table)}'";
                 conn.Open();
                 foreach (var table in settings.Tables)
                 {
-                    table.Initialize(conn);
+                    table.Initialize(conn, settings);
                     Console.WriteLine($"Importing table {table.Name}");
-                    var fields = GetFields(table.Name, conn);
+                    var fields = table.Fields;
 
                     using (var cmd = conn.CreateCommand())
                     {
@@ -86,19 +86,15 @@ AND table_name = '{Get1PartName(table)}'";
 
                         SqlBulkCopy bulkCopy = new SqlBulkCopy(conn);
                         bulkCopy.BulkCopyTimeout = 120;
-                        bulkCopy.DestinationTableName = "##" + Get1PartName(table.Name);
+                        bulkCopy.DestinationTableName = "##" + table.BasicName;
                         bulkCopy.EnableStreaming = true;
 
                         bulkCopy.WriteToServer(reader);
 
-                        var primaryKey = LoadPrimaryKey(table.Name, conn);
-
-                        if (primaryKey == null)
+                        if (table.PrimaryKey == null)
                             throw new DbSyncException($"No primary key found for table {table}");
 
-                        var rest = GetNonPKOrAuditFields(fields, primaryKey, settings);
-
-                        cmd.CommandText = Merge.GetSqlForMergeStrategy(settings, Get2PartName(table.Name), "##" + Get1PartName(table.Name), primaryKey, rest);
+                        cmd.CommandText = Merge.GetSqlForMergeStrategy(settings, table.QualifiedName, "##" + table.BasicName, table.PrimaryKey, table.DataFields);
 
                         cmd.CommandTimeout = 120;
 
