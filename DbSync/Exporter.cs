@@ -49,7 +49,7 @@ namespace DbSync
                 writer.Close();
             }
         }
-        public void Export(JobSettings settings)
+        public void Export(JobSettings settings, string environment)
         {
             if (!Directory.Exists(settings.Path))
                 Directory.CreateDirectory(settings.Path);
@@ -70,6 +70,13 @@ namespace DbSync
                         cmd.CommandType = CommandType.Text;
 
                         WriteQueryToXmlFile(cmd, Path.Combine(settings.Path, table.Name), settings);
+
+                        if (table.IsEnvironmentSpecific)
+                        {
+                            //Switch IsEnvironmentSpecific = 0 to IsEnvironmentSpecific = 1
+                            cmd.CommandText = cmd.CommandText.Substring(0, cmd.CommandText.Length - 1) + "1";
+                            WriteQueryToXmlFile(cmd, Path.Combine(settings.Path, table.Name) + "." + environment, settings);
+                        }
                     }
                 }
             }
