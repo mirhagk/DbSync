@@ -66,7 +66,18 @@ AND table_name = '{Get1PartName(table)}'";
                 return cmd.ExecuteScalar() as string;
             }
         }
-        public void Import(JobSettings settings)
+        private void CopyFromFileToTable(SqlConnection connection, string file, string table, List<string> fields)
+        {
+            var reader = new XmlRecordDataReader(file, fields);
+
+            SqlBulkCopy bulkCopy = new SqlBulkCopy(connection);
+            bulkCopy.BulkCopyTimeout = 120;
+            bulkCopy.DestinationTableName = table;
+            bulkCopy.EnableStreaming = true;
+
+            bulkCopy.WriteToServer(reader);
+        }
+        public void Import(JobSettings settings, string environment)
         {
             using (var conn = new SqlConnection(settings.ConnectionString))
             {
@@ -82,14 +93,15 @@ AND table_name = '{Get1PartName(table)}'";
                         cmd.CommandText = GetTempTableScript(table.Name, fields);
                         cmd.ExecuteNonQuery();
 
-                        var reader = new XmlRecordDataReader(Path.Combine(settings.Path, table.Name), fields);
+                        CopyFromFileToTable(conn, Path.Combine(settings.Path, table.Name), "##" + table.BasicName, table.Fields);
 
-                        SqlBulkCopy bulkCopy = new SqlBulkCopy(conn);
-                        bulkCopy.BulkCopyTimeout = 120;
-                        bulkCopy.DestinationTableName = "##" + table.BasicName;
-                        bulkCopy.EnableStreaming = true;
-
-                        bulkCopy.WriteToServer(reader);
+                        if (table.IsEnvironmentSpecific)
+                        {
+                            var enviroFile = Path.Combine(settings.Path, table.Name) + "." + environment;
+                            if (File.Exists(enviroFile))
+                                CopyFromFileToTable(conn, enviroFile, "##" + table.BasicName, table.Fields);
+                        }
+                        
 
                         if (table.PrimaryKey == null)
                             throw new DbSyncException($"No primary key found for table {table}");
