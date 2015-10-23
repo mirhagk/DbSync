@@ -40,17 +40,7 @@ namespace DbSync
             try
             {
                 if (cmdArgs.Export)
-                    try
-                    {
-                        Exporter.Instance.Export(job).Wait();
-                    }
-                    catch (AggregateException aggEx)
-                    {
-                        foreach (var ex in aggEx.InnerExceptions)
-                        {
-                            Console.Error.WriteLine($"Job failed because of exception {ex.Message}");
-                        }
-                    }
+                    Exporter.Instance.Export(job);
                 if (cmdArgs.Import)
                     Importer.Instance.Import(job, cmdArgs.Environment);
                 if (cmdArgs.ImportScript)
