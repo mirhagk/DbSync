@@ -15,8 +15,6 @@ namespace DbSync
         [XmlText]
         public string Name { get; set; }
         [XmlAttribute]
-        public string Key { get; set; }
-        [XmlAttribute]
         public bool IsEnvironmentSpecific { get; set; }
         #endregion
 
@@ -28,6 +26,7 @@ namespace DbSync
             this.settings = settings;
         }
 
+        [XmlIgnore]
         public string BasicName
         {
             get
@@ -35,6 +34,7 @@ namespace DbSync
                 return Name.Split('.').Last();
             }
         }
+        [XmlIgnore]
         public string QualifiedName
         {
             get
@@ -48,6 +48,7 @@ namespace DbSync
             }
         }
         List<string> fields;
+        [XmlIgnore]
         public List<string> Fields
         {
             get
@@ -81,6 +82,7 @@ ORDER BY column_id
             }
         }
         List<string> dataFields;
+        [XmlIgnore]
         public List<string> DataFields
         {
             get
@@ -101,6 +103,7 @@ ORDER BY column_id
             }
         }
         string primaryKey;
+        [XmlAttribute]
         public string PrimaryKey
         {
             get
@@ -110,6 +113,10 @@ ORDER BY column_id
 
                 primaryKey = Fields.SingleOrDefault(f => f.ToLowerInvariant() == "id" || f.ToLowerInvariant() == BasicName.ToLowerInvariant() + "id");
                 return primaryKey;
+            }
+            set
+            {
+                primaryKey = value;
             }
         }
     }
