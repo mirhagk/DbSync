@@ -8,9 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace DbSync
+namespace DbSync.Core
 {
-    class Exporter:Transfer
+    public class Exporter:Transfer
     {
         public static Exporter Instance = new Exporter();
         private Exporter() { }

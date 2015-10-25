@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 
 namespace DbSync
 {
-    class DbSyncException:Exception
+    public class Transfer
     {
-        public DbSyncException(string message) : base(message) { }
     }
 }

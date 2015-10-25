@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace DbSync
+namespace DbSync.Core
 {
     public class DictionaryDataReader : IDataReader
     {

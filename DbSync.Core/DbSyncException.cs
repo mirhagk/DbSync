@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DbSync
+namespace DbSync.Core
 {
-    class Transfer
+    public class DbSyncException:Exception
     {
+        public DbSyncException(string message) : base(message) { }
     }
 }

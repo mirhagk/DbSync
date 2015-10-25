@@ -9,9 +9,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace DbSync
+namespace DbSync.Core
 {
-    class Importer : Transfer
+    public class Importer : Transfer
     {
         public static Importer Instance = new Importer();
         private Importer() { }
