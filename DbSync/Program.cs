@@ -16,8 +16,9 @@ namespace DbSync
 {
     public class Program
     {
-        class CommandLineArguments
+        public class CommandLineArguments
         {
+            public bool Interactive { get; set; }
             public bool Import { get; set; }
             public bool ImportScript { get; set; }
             public bool Export { get; set; }
@@ -47,6 +48,7 @@ namespace DbSync
                     Importer.Instance.Import(job, cmdArgs.Environment);
                 if (cmdArgs.ImportScript)
                     File.WriteAllText(cmdArgs.ImportScriptName, Importer.Instance.GenerateImportScript(job, cmdArgs.Environment));
+
             }
             catch(DbSyncException ex)
             {
@@ -95,7 +97,10 @@ namespace DbSync
                     Console.Error.WriteLine($"No job found that matches {cmdArgs.Job}");
                     return;
                 }
-                RunJob(selectedJob, cmdArgs);
+                if (cmdArgs.Interactive)
+                    new InteractiveMode(selectedJob, cmdArgs).Run();
+                else
+                    RunJob(selectedJob, cmdArgs);
             }
         }
     }
