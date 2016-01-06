@@ -1,4 +1,5 @@
 ﻿using DbSync.Core;
+using DbSync.Core.Transfers;
 using System;
 using System.Collections.Generic;
 using System.Data;

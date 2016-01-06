@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace DbSync.Core
+namespace DbSync.Core.Transfers
 {
     public class Importer : Transfer
     {
