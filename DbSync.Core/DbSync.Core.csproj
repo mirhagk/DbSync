@@ -48,12 +48,14 @@
     <Compile Include="DictionaryDataReader.cs" />
     <Compile Include="Transfers\Exporter.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="Transfers\GenerateImportScript.cs" />
     <Compile Include="Transfers\Importer.cs" />
     <Compile Include="JobSettings.cs" />
     <Compile Include="JsonConverter.cs" />
     <Compile Include="Merge.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Table.cs" />
+    <Compile Include="Transfers\ImportTransfer.cs" />
     <Compile Include="Transfers\Transfer.cs" />
     <Compile Include="XmlRecordDataReader.cs" />
   </ItemGroup>

@@ -46,9 +46,9 @@ namespace DbSync
                 if (cmdArgs.Export)
                     Exporter.Instance.Export(job, cmdArgs.Environment);
                 if (cmdArgs.Import)
-                    Importer.Instance.Import(job, cmdArgs.Environment);
+                    Importer.Instance.Run(job, cmdArgs.Environment);
                 if (cmdArgs.ImportScript)
-                    File.WriteAllText(cmdArgs.ImportScriptName, Importer.Instance.GenerateImportScript(job, cmdArgs.Environment));
+                    File.WriteAllText(cmdArgs.ImportScriptName, GenerateImportScript.Instance.Run(job, cmdArgs.Environment));
 
             }
             catch(DbSyncException ex)
