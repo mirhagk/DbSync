@@ -26,7 +26,7 @@ namespace DbSync.Core.Transfers
 
             bulkCopy.WriteToServer(reader);
         }
-        public void override Run(JobSettings settings, string environment)
+        public override void Run(JobSettings settings, string environment)
         {
             using (var conn = new SqlConnection(settings.ConnectionString))
             {

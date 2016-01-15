@@ -13,6 +13,7 @@ namespace DbSync.Core.Transfers
     public class GenerateImportScript : ImportTransfer
     {
         public static GenerateImportScript Instance = new GenerateImportScript();
+        public string Filename { get; set; }
         string GetSQLLiteral(string value) => value == null ? "NULL" : $"'{value}'";
         string ImportScriptForFile(Table table, string file)
         {
@@ -44,7 +45,7 @@ namespace DbSync.Core.Transfers
 
             return result;
         }
-        public override string Run(JobSettings settings, string environment)
+        public override void Run(JobSettings settings, string environment)
         {
             using (var conn = new SqlConnection(settings.ConnectionString))
             {
@@ -73,7 +74,7 @@ namespace DbSync.Core.Transfers
 
                     script += Merge.GetSqlForMergeStrategy(settings, table.QualifiedName, "##" + table.BasicName, table.PrimaryKey, table.DataFields);
                 }
-                return script;
+                File.WriteAllText(Filename, script);
             }
         }
     }
