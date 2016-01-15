@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace DbSync.Core.Transfers
 {
-    public class Transfer
+    public abstract class Transfer
     {
+        public abstract void Run(JobSettings settings, string environment);
     }
 }

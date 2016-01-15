@@ -44,7 +44,7 @@ namespace DbSync
             try
             {
                 if (cmdArgs.Export)
-                    Exporter.Instance.Export(job, cmdArgs.Environment);
+                    Exporter.Instance.Run(job, cmdArgs.Environment);
                 if (cmdArgs.Import)
                     Importer.Instance.Run(job, cmdArgs.Environment);
                 if (cmdArgs.ImportScript)

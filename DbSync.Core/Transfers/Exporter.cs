@@ -10,7 +10,7 @@ using System.Xml;
 
 namespace DbSync.Core.Transfers
 {
-    public class Exporter:Transfer
+    public class Exporter : Transfer
     {
         public static Exporter Instance = new Exporter();
         private Exporter() { }
@@ -49,7 +49,7 @@ namespace DbSync.Core.Transfers
                 writer.Close();
             }
         }
-        public void Export(JobSettings settings, string environment)
+        public override void Run(JobSettings settings, string environment)
         {
             if (!Directory.Exists(settings.Path))
                 Directory.CreateDirectory(settings.Path);

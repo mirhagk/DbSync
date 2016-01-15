@@ -44,7 +44,7 @@ namespace DbSync.Core.Transfers
 
             return result;
         }
-        public string Run(JobSettings settings, string environment)
+        public override string Run(JobSettings settings, string environment)
         {
             using (var conn = new SqlConnection(settings.ConnectionString))
             {
