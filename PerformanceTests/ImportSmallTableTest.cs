@@ -16,6 +16,7 @@ namespace PerformanceTests
         SqlConnection connection;
         //const string connectionString = @"Data Source=(LocalDB)\v11.0;AttachDbFilename=|DataDirectory|\ImportSmallTableTest.mdf;Integrated Security=True";
         const string connectionString = @"Data Source=.;Database=tempdb;Integrated Security=True";
+        JobSettings settings;
         [PerfSetup]
         public void Setup(BenchmarkContext context)
         {
@@ -27,14 +28,8 @@ namespace PerformanceTests
                 cmd.CommandText = "CREATE TABLE SmallTable( SmallTableID int NOT NULL, [Key] NVARCHAR(MAX) NOT NULL, Value NVARCHAR(MAX))";
                 cmd.ExecuteNonQuery();
             }
-        }
-        [PerfBenchmark(NumberOfIterations =3,RunMode =RunMode.Throughput,RunTimeMilliseconds =2000)]
-        [MemoryMeasurement(MemoryMetric.TotalBytesAllocated)]
-        [GcMeasurement(GcMetric.TotalCollections,GcGeneration.AllGc)]
-        [CounterThroughputAssertion(nameof(ImportSmallTableTest),MustBe.GreaterThan,10000)]
-        public void Run()
-        {
-            var settings = new JobSettings();
+
+            settings = new JobSettings();
             settings.ConnectionString = connectionString;
             settings.Path = @"Data";
             settings.UseAuditColumnsOnImport = false;
@@ -43,8 +38,15 @@ namespace PerformanceTests
             settings.AuditColumns = new JobSettings.AuditSettings();
             settings.Tables.Add(new Table()
             {
-                Name="dbo.SmallTable",
+                Name = "dbo.SmallTable",
             });
+        }
+        [PerfBenchmark(NumberOfIterations =3,RunMode =RunMode.Throughput,RunTimeMilliseconds =2000)]
+        [MemoryMeasurement(MemoryMetric.TotalBytesAllocated)]
+        [GcMeasurement(GcMetric.TotalCollections,GcGeneration.AllGc)]
+        [CounterThroughputAssertion(nameof(ImportSmallTableTest),MustBe.GreaterThan,10000)]
+        public void Run()
+        {
             DbSync.Core.Transfers.Importer.Instance.Run(settings, "test");
             counter.Increment();
         }
