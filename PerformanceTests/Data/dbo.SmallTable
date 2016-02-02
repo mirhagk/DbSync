@@ -1,0 +1,22 @@
+﻿<root>
+  <row
+    SmallTableID="1"
+    Key="Colour"
+    Value="Red" />
+  <row
+    SmallTableID="2"
+    Key="First Name"
+    Value="Bob" />
+  <row
+    SmallTableID="3"
+    Key="Last Name"
+    Value="Smith" />
+  <row
+    SmallTableID="4"
+    Key="Food"
+    Value="Banana" />
+  <row
+    SmallTableID="5"
+    Key="Drink"
+    Value="Milk" />
+</root>
