@@ -24,29 +24,15 @@ namespace DbSync.Core
         {
             this.connection = connection;
             this.settings = settings;
+			
         }
 
         [XmlIgnore]
-        public string BasicName
-        {
-            get
-            {
-                return Name.Split('.').Last();
-            }
-        }
+        public string BasicName => Name.Split('.').Last();
+		[XmlIgnore]
+		public string SchemaName => Name.Contains(".") ? Name.Split('.')[0]:"[dbo]";
         [XmlIgnore]
-        public string QualifiedName
-        {
-            get
-            {
-                if (!Name.Contains("."))
-                    return $"[dbo].[{Name}]";
-                if (!Name.Contains("["))
-                    return $"[{Name.Split('.')[0]}].[{Name.Split('.')[1]}]";
-                return Name;
-
-            }
-        }
+        public string QualifiedName => $"{SchemaName}.[{BasicName}]";
         List<string> fields;
         [XmlIgnore]
         public List<string> Fields
