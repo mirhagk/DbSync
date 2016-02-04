@@ -26,6 +26,33 @@ namespace DbSync.Core.Transfers
 
             bulkCopy.WriteToServer(reader);
         }
+		void ImportTable(SqlConnection connection, Table table, JobSettings settings, string environment)
+		{
+			Console.WriteLine($"Importing table {table.Name}");
+
+			using (var cmd = connection.CreateCommand())
+			{
+				cmd.CommandText = GetTempTableScript(table);
+				cmd.ExecuteNonQuery();
+
+				CopyFromFileToTable(connection, Path.Combine(settings.Path, table.Name), "##" + table.BasicName, table.Fields);
+
+				if (table.IsEnvironmentSpecific)
+				{
+					var enviroFile = Path.Combine(settings.Path, table.Name) + "." + environment;
+					if (File.Exists(enviroFile))
+						CopyFromFileToTable(connection, enviroFile, "##" + table.BasicName, table.Fields);
+				}
+				
+
+
+				cmd.CommandText = Merge.GetSqlForMergeStrategy(settings, table.QualifiedName, "##" + table.BasicName, table.PrimaryKey, table.DataFields);
+
+				cmd.CommandTimeout = 120;
+
+				cmd.ExecuteNonQuery();
+			}
+		}
         public override void Run(JobSettings settings, string environment)
         {
             using (var conn = new SqlConnection(settings.ConnectionString))
@@ -34,33 +61,13 @@ namespace DbSync.Core.Transfers
                 foreach (var table in settings.Tables)
                 {
                     table.Initialize(conn, settings);
-                    Console.WriteLine($"Importing table {table.Name}");
-                    var fields = table.Fields;
-
-                    using (var cmd = conn.CreateCommand())
-                    {
-                        cmd.CommandText = GetTempTableScript(table);
-                        cmd.ExecuteNonQuery();
-
-                        CopyFromFileToTable(conn, Path.Combine(settings.Path, table.Name), "##" + table.BasicName, table.Fields);
-
-                        if (table.IsEnvironmentSpecific)
-                        {
-                            var enviroFile = Path.Combine(settings.Path, table.Name) + "." + environment;
-                            if (File.Exists(enviroFile))
-                                CopyFromFileToTable(conn, enviroFile, "##" + table.BasicName, table.Fields);
-                        }
-                        
-
-                        if (table.PrimaryKey == null)
-                            throw new DbSyncException($"No primary key found for table {table}");
-
-                        cmd.CommandText = Merge.GetSqlForMergeStrategy(settings, table.QualifiedName, "##" + table.BasicName, table.PrimaryKey, table.DataFields);
-
-                        cmd.CommandTimeout = 120;
-
-                        cmd.ExecuteNonQuery();
-                    }
+					
+					if (table.PrimaryKey == null)
+						throw new DbSyncException($"No primary key found for table {table}");
+				
+                    ImportTable(conn,table,settings,environment);
+					
+					
                 }
             }
         }
