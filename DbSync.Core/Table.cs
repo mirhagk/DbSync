@@ -25,6 +25,29 @@ namespace DbSync.Core
             this.connection = connection;
             this.settings = settings;
 			
+			using (var cmd = connection.CreateCommand())
+			{
+				cmd.CommandText = @"
+SELECT c.name 
+FROM sys.all_objects o
+LEFT JOIN sys.all_columns c ON o.object_id = c.object_id
+WHERE o.name = '@table'
+ORDER BY column_id
+".FormatWith(new { table = BasicName });
+
+				cmd.CommandType = CommandType.Text;
+				var sqlReader = cmd.ExecuteReader();
+
+				Fields = new List<string>();
+
+				while (sqlReader.Read())
+				{
+					var field = sqlReader.GetString(0);
+
+					Fields.Add(field);
+				}
+				sqlReader.Close();
+			}
         }
 
         [XmlIgnore]
@@ -33,40 +56,9 @@ namespace DbSync.Core
 		public string SchemaName => Name.Contains(".") ? Name.Split('.')[0]:"[dbo]";
         [XmlIgnore]
         public string QualifiedName => $"{SchemaName}.[{BasicName}]";
-        List<string> fields;
+        List<string> Fields;
         [XmlIgnore]
-        public List<string> Fields
-        {
-            get
-            {
-                if (fields != null)
-                    return fields;
-                using (var cmd = connection.CreateCommand())
-                {
-                    cmd.CommandText = @"
-SELECT c.name 
-FROM sys.all_objects o
-LEFT JOIN sys.all_columns c ON o.object_id = c.object_id
-WHERE o.name = '@table'
-ORDER BY column_id
-".FormatWith(new { table = BasicName });
-
-                    cmd.CommandType = CommandType.Text;
-                    var sqlReader = cmd.ExecuteReader();
-
-                    fields = new List<string>();
-
-                    while (sqlReader.Read())
-                    {
-                        var field = sqlReader.GetString(0);
-
-                        fields.Add(field);
-                    }
-                    sqlReader.Close();
-                    return fields;
-                }
-            }
-        }
+        public List<string> Fields { get; }
         List<string> dataFields;
         [XmlIgnore]
         public List<string> DataFields
