@@ -38,8 +38,6 @@ ORDER BY column_id
 				cmd.CommandType = CommandType.Text;
 				var sqlReader = cmd.ExecuteReader();
 
-				Fields = new List<string>();
-
 				while (sqlReader.Read())
 				{
 					var field = sqlReader.GetString(0);
@@ -48,6 +46,19 @@ ORDER BY column_id
 				}
 				sqlReader.Close();
 			}
+            var data = Fields.Select(f => f.ToLowerInvariant());
+
+            PrimaryKey = data.SingleOrDefault(f => f == "id" || f == BasicName.ToLowerInvariant() + "id");
+
+
+            data = data
+                .Where(f => f != PrimaryKey)
+                .Where(f => !settings.AuditColumns.AuditColumnNames().Select(a=>a.ToLowerInvariant()).Contains(f));
+
+            if (IsEnvironmentSpecific)
+                data = data.Where(f => f != "isenvironmentspecific");
+
+            DataFields = data.ToList();
         }
 
         [XmlIgnore]
@@ -56,46 +67,12 @@ ORDER BY column_id
 		public string SchemaName => Name.Contains(".") ? Name.Split('.')[0]:"[dbo]";
         [XmlIgnore]
         public string QualifiedName => $"{SchemaName}.[{BasicName}]";
-        List<string> Fields;
         [XmlIgnore]
-        public List<string> Fields { get; }
-        List<string> dataFields;
+        public List<string> Fields { get; } = new List<string>();
         [XmlIgnore]
-        public List<string> DataFields
-        {
-            get
-            {
-                if (dataFields != null)
-                    return dataFields;
-
-                var data = Fields
-                    .Where(f => f != PrimaryKey)
-                    .Where(f => !settings.AuditColumns.AuditColumnNames().Contains(f));
-
-                if (IsEnvironmentSpecific)
-                    data = data.Where(f => f.ToLowerInvariant() != "isenvironmentspecific");
-
-                dataFields = data.ToList();
-
-                return dataFields;
-            }
-        }
+        public List<string> DataFields { get; private set; }
         string primaryKey;
         [XmlAttribute]
-        public string PrimaryKey
-        {
-            get
-            {
-                if (primaryKey != null)
-                    return primaryKey;
-
-                primaryKey = Fields.SingleOrDefault(f => f.ToLowerInvariant() == "id" || f.ToLowerInvariant() == BasicName.ToLowerInvariant() + "id");
-                return primaryKey;
-            }
-            set
-            {
-                primaryKey = value;
-            }
-        }
+        public string PrimaryKey { get; private set; }
     }
 }
