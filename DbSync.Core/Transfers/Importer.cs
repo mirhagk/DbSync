@@ -44,15 +44,9 @@ namespace DbSync.Core.Transfers
                 foreach (var table in settings.Tables)
                 {
                     table.Initialize(conn, settings);
-					
-					if (table.PrimaryKey == null)
-						throw new DbSyncException($"No primary key found for table {table.Name}");
-
-
+                    
                     var client = new SqlClient(conn);
-                    ImportTable(client, table, settings);
-					
-					
+                    ImportTable(client, table, settings);		
                 }
             }
         }
