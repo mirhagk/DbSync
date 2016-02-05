@@ -31,11 +31,8 @@ namespace DbSync.Core.Transfers
 			CopyFromFileToTable(client, Path.Combine(settings.Path, table.Name), "##" + table.BasicName, table.Fields);
 
 			if (table.IsEnvironmentSpecific)
-			{
-				var enviroFile = Path.Combine(settings.Path, table.Name) + "." + settings.CurrentEnvironment;
-				if (File.Exists(enviroFile))
-					CopyFromFileToTable(client, enviroFile, "##" + table.BasicName, table.Fields);
-			}
+				if (File.Exists(table.EnvironmentSpecificFileName))
+					CopyFromFileToTable(client, table.EnvironmentSpecificFileName, "##" + table.BasicName, table.Fields);
 
             client.ExecuteSql(Merge.GetSqlForMergeStrategy(settings, table.QualifiedName, "##" + table.BasicName, table.PrimaryKey, table.DataFields));
 		}

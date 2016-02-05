@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -67,6 +68,8 @@ ORDER BY column_id
 		public string SchemaName => Name.Contains(".") ? Name.Split('.')[0]:"[dbo]";
         [XmlIgnore]
         public string QualifiedName => $"{SchemaName}.[{BasicName}]";
+        [XmlIgnore]
+        public string EnvironmentSpecificFileName => Path.Combine(settings.Path, Name) + "." + settings.CurrentEnvironment;
         [XmlIgnore]
         public List<string> Fields { get; } = new List<string>();
         [XmlIgnore]
