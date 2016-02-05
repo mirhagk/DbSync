@@ -54,7 +54,7 @@ namespace DbSync.Core.Transfers
                     table.Initialize(conn, settings);
 					
 					if (table.PrimaryKey == null)
-						throw new DbSyncException($"No primary key found for table {table}");
+						throw new DbSyncException($"No primary key found for table {table.Name}");
 
 
                     var client = new SqlClient(conn);
