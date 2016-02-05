@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using DbSync.Core.Utility;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -26,32 +27,22 @@ namespace DbSync.Core.Transfers
 
             bulkCopy.WriteToServer(reader);
         }
-		void ImportTable(SqlConnection connection, Table table, JobSettings settings, string environment)
+		void ImportTable(SqlClient client, Table table, JobSettings settings, string environment)
 		{
 			Console.WriteLine($"Importing table {table.Name}");
 
-			using (var cmd = connection.CreateCommand())
+            client.ExecuteSql(GetTempTableScript(table));
+
+			CopyFromFileToTable(client.Connection, Path.Combine(settings.Path, table.Name), "##" + table.BasicName, table.Fields);
+
+			if (table.IsEnvironmentSpecific)
 			{
-				cmd.CommandText = GetTempTableScript(table);
-				cmd.ExecuteNonQuery();
-
-				CopyFromFileToTable(connection, Path.Combine(settings.Path, table.Name), "##" + table.BasicName, table.Fields);
-
-				if (table.IsEnvironmentSpecific)
-				{
-					var enviroFile = Path.Combine(settings.Path, table.Name) + "." + environment;
-					if (File.Exists(enviroFile))
-						CopyFromFileToTable(connection, enviroFile, "##" + table.BasicName, table.Fields);
-				}
-				
-
-
-				cmd.CommandText = Merge.GetSqlForMergeStrategy(settings, table.QualifiedName, "##" + table.BasicName, table.PrimaryKey, table.DataFields);
-
-				cmd.CommandTimeout = 120;
-
-				cmd.ExecuteNonQuery();
+				var enviroFile = Path.Combine(settings.Path, table.Name) + "." + environment;
+				if (File.Exists(enviroFile))
+					CopyFromFileToTable(client.Connection, enviroFile, "##" + table.BasicName, table.Fields);
 			}
+
+            client.ExecuteSql(Merge.GetSqlForMergeStrategy(settings, table.QualifiedName, "##" + table.BasicName, table.PrimaryKey, table.DataFields));
 		}
         public override void Run(JobSettings settings, string environment)
         {
@@ -64,8 +55,10 @@ namespace DbSync.Core.Transfers
 					
 					if (table.PrimaryKey == null)
 						throw new DbSyncException($"No primary key found for table {table}");
-				
-                    ImportTable(conn,table,settings,environment);
+
+
+                    var client = new SqlClient(conn);
+                    ImportTable(client, table, settings, environment);
 					
 					
                 }

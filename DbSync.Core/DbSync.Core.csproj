@@ -57,6 +57,7 @@
     <Compile Include="Table.cs" />
     <Compile Include="Transfers\ImportTransfer.cs" />
     <Compile Include="Transfers\Transfer.cs" />
+    <Compile Include="Utility\SqlHelper.cs" />
     <Compile Include="XmlRecordDataReader.cs" />
   </ItemGroup>
   <ItemGroup>
