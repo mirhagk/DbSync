@@ -1,4 +1,4 @@
-﻿using DbSync.Core.Utility;
+﻿using Dapper;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -16,25 +16,30 @@ namespace DbSync.Core.Transfers
     {
         public static Importer Instance = new Importer();
         private Importer() { }
-        void CopyFromFileToTable(SqlClient client, string file, string table, List<string> fields)
+        void CopyFromFileToTable(SqlConnection connection, string file, string table, List<string> fields)
         {
             var reader = new XmlRecordDataReader(file, fields);
-            
-            client.BulkImportToTable(table, reader);
+
+            SqlBulkCopy bulkCopy = new SqlBulkCopy(connection);
+            bulkCopy.BulkCopyTimeout = 120;
+            bulkCopy.DestinationTableName = table;
+            bulkCopy.EnableStreaming = true;
+
+            bulkCopy.WriteToServer(reader);
         }
-		void ImportTable(SqlClient client, Table table, JobSettings settings)
+		void ImportTable(SqlConnection connection, Table table, JobSettings settings)
 		{
 			Console.WriteLine($"Importing table {table.Name}");
 
-            client.ExecuteSql(GetTempTableScript(table));
+            connection.Execute(GetTempTableScript(table));
 
-			CopyFromFileToTable(client, Path.Combine(settings.Path, table.Name), "##" + table.BasicName, table.Fields);
+			CopyFromFileToTable(connection, Path.Combine(settings.Path, table.Name), "##" + table.BasicName, table.Fields);
 
 			if (table.IsEnvironmentSpecific)
 				if (File.Exists(table.EnvironmentSpecificFileName))
-					CopyFromFileToTable(client, table.EnvironmentSpecificFileName, "##" + table.BasicName, table.Fields);
+					CopyFromFileToTable(connection, table.EnvironmentSpecificFileName, "##" + table.BasicName, table.Fields);
 
-            client.ExecuteSql(Merge.GetSqlForMergeStrategy(settings, table.QualifiedName, "##" + table.BasicName, table.PrimaryKey, table.DataFields));
+            connection.Execute(Merge.GetSqlForMergeStrategy(settings, table.QualifiedName, "##" + table.BasicName, table.PrimaryKey, table.DataFields));
 		}
         public override void Run(JobSettings settings, string environment)
         {
@@ -44,9 +49,8 @@ namespace DbSync.Core.Transfers
                 foreach (var table in settings.Tables)
                 {
                     table.Initialize(conn, settings);
-
-                    using (var client = new SqlClient(settings.ConnectionString))
-                        ImportTable(client, table, settings);
+                    
+                    ImportTable(conn, table, settings);
                 }
             }
         }
