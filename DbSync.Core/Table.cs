@@ -71,8 +71,7 @@ ORDER BY column_id
         public List<string> Fields { get; } = new List<string>();
         [XmlIgnore]
         public List<string> DataFields { get; private set; }
-        string primaryKey;
         [XmlAttribute]
-        public string PrimaryKey { get; private set; }
+        public string PrimaryKey { get; set; }
     }
 }
