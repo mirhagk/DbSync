@@ -16,16 +16,11 @@ namespace DbSync.Core.Transfers
     {
         public static Importer Instance = new Importer();
         private Importer() { }
-        void CopyFromFileToTable(SqlConnection connection, string file, string table, List<string> fields)
+        void CopyFromFileToTable(SqlClient client, string file, string table, List<string> fields)
         {
             var reader = new XmlRecordDataReader(file, fields);
-
-            SqlBulkCopy bulkCopy = new SqlBulkCopy(connection);
-            bulkCopy.BulkCopyTimeout = 120;
-            bulkCopy.DestinationTableName = table;
-            bulkCopy.EnableStreaming = true;
-
-            bulkCopy.WriteToServer(reader);
+            
+            client.BulkImportToTable(table, reader);
         }
 		void ImportTable(SqlClient client, Table table, JobSettings settings, string environment)
 		{
@@ -33,13 +28,13 @@ namespace DbSync.Core.Transfers
 
             client.ExecuteSql(GetTempTableScript(table));
 
-			CopyFromFileToTable(client.Connection, Path.Combine(settings.Path, table.Name), "##" + table.BasicName, table.Fields);
+			CopyFromFileToTable(client, Path.Combine(settings.Path, table.Name), "##" + table.BasicName, table.Fields);
 
 			if (table.IsEnvironmentSpecific)
 			{
 				var enviroFile = Path.Combine(settings.Path, table.Name) + "." + environment;
 				if (File.Exists(enviroFile))
-					CopyFromFileToTable(client.Connection, enviroFile, "##" + table.BasicName, table.Fields);
+					CopyFromFileToTable(client, enviroFile, "##" + table.BasicName, table.Fields);
 			}
 
             client.ExecuteSql(Merge.GetSqlForMergeStrategy(settings, table.QualifiedName, "##" + table.BasicName, table.PrimaryKey, table.DataFields));

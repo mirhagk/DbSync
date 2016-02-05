@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
@@ -23,6 +24,16 @@ namespace DbSync.Core.Utility
                 cmd.CommandTimeout = 120;
                 cmd.ExecuteNonQuery();
             }
+        }
+        public void BulkImportToTable(string table, IDataReader reader)
+        {
+
+            SqlBulkCopy bulkCopy = new SqlBulkCopy(connection);
+            bulkCopy.BulkCopyTimeout = 120;
+            bulkCopy.DestinationTableName = table;
+            bulkCopy.EnableStreaming = true;
+
+            bulkCopy.WriteToServer(reader);
         }
     }
 }
