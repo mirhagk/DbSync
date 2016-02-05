@@ -44,9 +44,9 @@ namespace DbSync.Core.Transfers
                 foreach (var table in settings.Tables)
                 {
                     table.Initialize(conn, settings);
-                    
-                    var client = new SqlClient(conn);
-                    ImportTable(client, table, settings);		
+
+                    using (var client = new SqlClient(settings.ConnectionString))
+                        ImportTable(client, table, settings);
                 }
             }
         }

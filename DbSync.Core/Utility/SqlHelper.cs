@@ -8,13 +8,14 @@ using System.Threading.Tasks;
 
 namespace DbSync.Core.Utility
 {
-    class SqlClient
+    class SqlClient:IDisposable
     {
         SqlConnection connection;
         public SqlConnection Connection => connection;
-        public SqlClient(SqlConnection connection)
+        public SqlClient(string connectionString)
         {
-            this.connection = connection;
+            connection = new SqlConnection(connectionString);
+            connection.Open();
         }
         public void ExecuteSql(string sql)
         {
@@ -34,6 +35,11 @@ namespace DbSync.Core.Utility
             bulkCopy.EnableStreaming = true;
 
             bulkCopy.WriteToServer(reader);
+        }
+        
+        public void Dispose()
+        {
+            connection.Dispose();
         }
     }
 }
