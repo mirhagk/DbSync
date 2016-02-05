@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Dapper;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -19,16 +20,14 @@ namespace DbSync.Core.Utility
         }
         public void ExecuteSql(string sql)
         {
-            using (var cmd = connection.CreateCommand())
-            {
-                cmd.CommandText = sql;
-                cmd.CommandTimeout = 120;
-                cmd.ExecuteNonQuery();
-            }
+            connection.Execute(sql);
+        }
+        public IEnumerable<T> Read<T>(string sql)
+        {
+            return connection.Query<T>(sql);
         }
         public void BulkImportToTable(string table, IDataReader reader)
         {
-
             SqlBulkCopy bulkCopy = new SqlBulkCopy(connection);
             bulkCopy.BulkCopyTimeout = 120;
             bulkCopy.DestinationTableName = table;
