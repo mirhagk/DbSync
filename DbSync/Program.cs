@@ -43,6 +43,7 @@ namespace DbSync
 
             try
             {
+                job.CurrentEnvironment = cmdArgs.Environment;
                 if (cmdArgs.Export)
                     Exporter.Instance.Run(job, cmdArgs.Environment);
                 if (cmdArgs.Import)

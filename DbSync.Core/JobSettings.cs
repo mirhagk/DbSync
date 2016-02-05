@@ -34,6 +34,7 @@ namespace DbSync.Core
         public bool IgnoreAuditColumnsOnExport { get; set; } = false;
         public bool UseAuditColumnsOnImport { get; set; } = false;
         public bool DisableConstraintsOnImport { get; set; } = false;
+        public string CurrentEnvironment { get; set; }
 
         public bool IsAuditColumn(string fieldName)
         {

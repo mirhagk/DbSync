@@ -22,7 +22,7 @@ namespace DbSync.Core.Transfers
             
             client.BulkImportToTable(table, reader);
         }
-		void ImportTable(SqlClient client, Table table, JobSettings settings, string environment)
+		void ImportTable(SqlClient client, Table table, JobSettings settings)
 		{
 			Console.WriteLine($"Importing table {table.Name}");
 
@@ -32,7 +32,7 @@ namespace DbSync.Core.Transfers
 
 			if (table.IsEnvironmentSpecific)
 			{
-				var enviroFile = Path.Combine(settings.Path, table.Name) + "." + environment;
+				var enviroFile = Path.Combine(settings.Path, table.Name) + "." + settings.CurrentEnvironment;
 				if (File.Exists(enviroFile))
 					CopyFromFileToTable(client, enviroFile, "##" + table.BasicName, table.Fields);
 			}
@@ -53,7 +53,7 @@ namespace DbSync.Core.Transfers
 
 
                     var client = new SqlClient(conn);
-                    ImportTable(client, table, settings, environment);
+                    ImportTable(client, table, settings);
 					
 					
                 }
