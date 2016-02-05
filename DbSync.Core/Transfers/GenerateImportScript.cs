@@ -62,14 +62,11 @@ namespace DbSync.Core.Transfers
                     script += GetTempTableScript(table) + "\n\n\n";
 
                     script += ImportScriptForFile(table, Path.Combine(settings.Path, table.Name));
-
+                    
 
                     if (table.IsEnvironmentSpecific)
-                    {
-                        var enviroFile = Path.Combine(settings.Path, table.Name) + "." + environment;
-                        if (File.Exists(enviroFile))
-                            script += ImportScriptForFile(table, enviroFile);
-                    }
+                        if (File.Exists(table.EnvironmentSpecificFileName))
+                            script += ImportScriptForFile(table, table.EnvironmentSpecificFileName);
 
 
                     script += Merge.GetSqlForMergeStrategy(settings, table.QualifiedName, "##" + table.BasicName, table.PrimaryKey, table.DataFields);
