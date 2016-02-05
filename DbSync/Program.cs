@@ -22,6 +22,7 @@ namespace DbSync
             public bool Interactive { get; set; }
             public bool Import { get; set; }
             public bool ImportScript { get; set; }
+            public bool ImportDiff { get; set; }
             public bool Export { get; set; }
             [PowerCommandParser.Required]
             public string Config { get; set; }
@@ -48,6 +49,8 @@ namespace DbSync
                     Exporter.Instance.Run(job, cmdArgs.Environment);
                 if (cmdArgs.Import)
                     Importer.Instance.Run(job, cmdArgs.Environment);
+                if (cmdArgs.ImportDiff)
+                    ImportDiffGenerator.Instance.Run(job, cmdArgs.Environment);
                 if (cmdArgs.ImportScript)
                 {
                     var importScriptGenerator = GenerateImportScript.Instance;

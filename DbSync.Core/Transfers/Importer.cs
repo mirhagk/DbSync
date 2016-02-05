@@ -16,17 +16,6 @@ namespace DbSync.Core.Transfers
     {
         public static Importer Instance = new Importer();
         private Importer() { }
-        void CopyFromFileToTable(SqlConnection connection, string file, string table, List<string> fields)
-        {
-            var reader = new XmlRecordDataReader(file, fields);
-
-            SqlBulkCopy bulkCopy = new SqlBulkCopy(connection);
-            bulkCopy.BulkCopyTimeout = 120;
-            bulkCopy.DestinationTableName = table;
-            bulkCopy.EnableStreaming = true;
-
-            bulkCopy.WriteToServer(reader);
-        }
 		void ImportTable(SqlConnection connection, Table table, JobSettings settings)
 		{
 			Console.WriteLine($"Importing table {table.Name}");

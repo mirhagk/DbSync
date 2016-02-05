@@ -53,6 +53,7 @@
     <Compile Include="Transfers\Exporter.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Transfers\GenerateImportScript.cs" />
+    <Compile Include="Transfers\ImportDiffGenerator.cs" />
     <Compile Include="Transfers\Importer.cs" />
     <Compile Include="JobSettings.cs" />
     <Compile Include="JsonConverter.cs" />
