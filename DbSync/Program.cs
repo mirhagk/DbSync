@@ -50,7 +50,11 @@ namespace DbSync
                 if (cmdArgs.Import)
                     Importer.Instance.Run(job, cmdArgs.Environment);
                 if (cmdArgs.ImportDiff)
-                    ImportDiffGenerator.Instance.Run(job, cmdArgs.Environment);
+                {
+                    var importDiffGenerator = ImportDiffGenerator.Instance;
+                    importDiffGenerator.Filename = cmdArgs.ImportScriptName;
+                    importDiffGenerator.Run(job, cmdArgs.Environment);
+                }
                 if (cmdArgs.ImportScript)
                 {
                     var importScriptGenerator = GenerateImportScript.Instance;
