@@ -65,18 +65,18 @@
     <Compile Include="XmlRecordDataReader.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Scripts\MergeWithDelete.sql">
+    <EmbeddedResource Include="Scripts\MergeWithDelete.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Scripts\MergeWithDeleteWithAudit.sql">
+    </EmbeddedResource>
+    <EmbeddedResource Include="Scripts\MergeWithDeleteWithAudit.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Scripts\MergeWithoutDelete.sql">
+    </EmbeddedResource>
+    <EmbeddedResource Include="Scripts\MergeWithoutDelete.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Scripts\MergeWithoutDeleteWithAudit.sql">
+    </EmbeddedResource>
+    <EmbeddedResource Include="Scripts\MergeWithoutDeleteWithAudit.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <None Include="DbSync.Core.nuspec" />
