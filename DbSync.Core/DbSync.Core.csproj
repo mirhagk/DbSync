@@ -69,11 +69,11 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Scripts\Delete.sql" />
-    <Content Include="Scripts\InsertWithAudit.sql" />
-    <Content Include="Scripts\Insert.sql" />
-    <Content Include="Scripts\Update.sql" />
-    <Content Include="Scripts\UpdateWithAudit.sql" />
+    <EmbeddedResource Include="Scripts\Delete.sql" />
+    <EmbeddedResource Include="Scripts\InsertWithAudit.sql" />
+    <EmbeddedResource Include="Scripts\Insert.sql" />
+    <EmbeddedResource Include="Scripts\Update.sql" />
+    <EmbeddedResource Include="Scripts\UpdateWithAudit.sql" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
