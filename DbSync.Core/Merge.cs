@@ -12,7 +12,7 @@ namespace DbSync.Core
     {
         public enum Strategy
         {
-            MergeWithoutDelete, MergeWithDelete, AddOnly, Overwrite
+            MergeWithoutDelete, MergeWithDelete, AddOnly, Override
         }
         private static string loadScript(string scriptName)
         {
@@ -86,7 +86,7 @@ namespace DbSync.Core
                 case Strategy.AddOnly:
                     sqlToUse = getInsert(settings);
                     break;
-                case Strategy.Overwrite:
+                case Strategy.Override:
                     sqlToUse = overwriteSql(settings, target, source, primaryKey, restOfColumns);
                     break;
                 default:
