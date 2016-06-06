@@ -35,8 +35,8 @@ namespace DbSync.Core
         static string insertWithAudit = loadScript(nameof(insertWithAudit));
         static string update = loadScript(nameof(update));
         static string updateWithAudit = loadScript(nameof(updateWithAudit));
-        static string getUpdate(JobSettings settings) => settings.UseAuditColumnsOnImport ? updateWithAudit : update;
-        static string getInsert(JobSettings settings) => settings.UseAuditColumnsOnImport ? insertWithAudit : insert;
+        static string getUpdate(JobSettings settings) => settings.UseAuditColumnsOnImport.Value ? updateWithAudit : update;
+        static string getInsert(JobSettings settings) => settings.UseAuditColumnsOnImport.Value ? insertWithAudit : insert;
         static string overwriteSql(JobSettings settings, string target, string source, string primaryKey, IEnumerable<string> restOfColumns)
         {
             string sql = $"UPDATE t SET ";
@@ -49,7 +49,7 @@ namespace DbSync.Core
                     sql += ",\n";
                 sql += $"[{column}] = ISNULL(s.[{column}],t.[{column}])";
             }
-            if (settings.UseAuditColumnsOnImport)
+            if (settings.UseAuditColumnsOnImport.Value)
             {
                 sql+= @",
 @modifiedUser = SUSER_NAME(),
