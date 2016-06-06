@@ -40,12 +40,20 @@ WHERE o.name = @table
 ORDER BY column_id
 ", new { table = BasicName }).Select(x => x.Name));
 
+            if (!Fields.Any())
+                throw new DbSyncException($"Could not find any information for table {Name}. Make sure it exists in the target database");
+
             var data = Fields.Select(f => f.ToLowerInvariant());
 
-            PrimaryKey = data.SingleOrDefault(f => f == "id" || f == BasicName.ToLowerInvariant() + "id");
-            
             if (PrimaryKey == null)
-                throw new DbSyncException($"No primary key found for table {Name}");
+            {
+                PrimaryKey = data.SingleOrDefault(f => f == "id" || f == BasicName.ToLowerInvariant() + "id");
+
+                if (PrimaryKey == null)
+                    throw new DbSyncException($"No primary key found for table {Name}");
+            }
+            else
+                PrimaryKey = PrimaryKey.ToLowerInvariant();
 
             data = data
                 .Where(f => f != PrimaryKey)
