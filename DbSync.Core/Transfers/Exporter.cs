@@ -36,7 +36,7 @@ namespace DbSync.Core.Transfers
                     for (int i = 0; i < reader.FieldCount; i++)
                     {
                         var fieldName = reader.GetName(i);
-                        if (settings.IgnoreAuditColumnsOnExport && settings.IsAuditColumn(fieldName))
+                        if (settings.IgnoreAuditColumnsOnExport.Value && settings.IsAuditColumn(fieldName))
                             continue;
                         if (reader.IsDBNull(i))//for null values just don't output the attribute at all
                             continue;

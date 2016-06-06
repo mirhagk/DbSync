@@ -34,8 +34,23 @@ namespace DbSync
         }
         public class Settings
         {
+            public string ConnectionString { get; set; }
+            public Merge.Strategy MergeStrategy { get; set; } = Merge.Strategy.MergeWithoutDelete;
+            public bool IgnoreAuditColumnsOnExport { get; set; } = false;
+            public bool UseAuditColumnsOnImport { get; set; } = false;
+            public bool DisableConstraintsOnImport { get; set; } = false;
+            public JobSettings.AuditSettings AuditColumns { get; set; }
             [XmlElement("Job")]
             public List<JobSettings> Jobs { get; set; }
+        }
+        static void ApplyGlobalSettings(JobSettings jobSettings, Settings globalSettings)
+        {
+            jobSettings.ConnectionString = jobSettings.ConnectionString ?? globalSettings.ConnectionString;
+            jobSettings.MergeStrategy = jobSettings.MergeStrategy ?? globalSettings.MergeStrategy;
+            jobSettings.IgnoreAuditColumnsOnExport = jobSettings.IgnoreAuditColumnsOnExport ?? globalSettings.IgnoreAuditColumnsOnExport;
+            jobSettings.UseAuditColumnsOnImport = jobSettings.UseAuditColumnsOnImport ?? globalSettings.UseAuditColumnsOnImport;
+            jobSettings.DisableConstraintsOnImport = jobSettings.DisableConstraintsOnImport ?? globalSettings.DisableConstraintsOnImport;
+            jobSettings.AuditColumns = jobSettings.AuditColumns ?? globalSettings.AuditColumns;
         }
         static void RunJob(JobSettings job, CommandLineArguments cmdArgs)
         {
@@ -99,21 +114,30 @@ namespace DbSync
             {
                 foreach (var job in settings.Jobs)
                 {
+                    ApplyGlobalSettings(job, settings);
                     RunJob(job, cmdArgs);
                 }
             }
             else
             {
-                var selectedJob = settings.Jobs.SingleOrDefault(j => j.Name.Equals(cmdArgs.Job, StringComparison.InvariantCultureIgnoreCase));
-                if (selectedJob == null)
+                var selectedJobs = cmdArgs.Job.Split(',').Select(j => j.ToLowerInvariant().Trim());
+                var jobs = settings.Jobs.Where(j => selectedJobs.Contains(j.Name.ToLowerInvariant()));
+                if (jobs.Any())
+                {
+                    foreach(var job in jobs)
+                    {
+                        ApplyGlobalSettings(job, settings);
+                        if (cmdArgs.Interactive)
+                            new InteractiveMode(job, cmdArgs).Run();
+                        else
+                            RunJob(job, cmdArgs);
+                    }
+                }
+                else
                 {
                     Console.Error.WriteLine($"No job found that matches {cmdArgs.Job}");
                     return;
                 }
-                if (cmdArgs.Interactive)
-                    new InteractiveMode(selectedJob, cmdArgs).Run();
-                else
-                    RunJob(selectedJob, cmdArgs);
             }
         }
     }
