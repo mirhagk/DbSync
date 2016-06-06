@@ -78,10 +78,10 @@ namespace DbSync.Core
             switch (settings.MergeStrategy)
             {
                 case Strategy.MergeWithoutDelete:
-                    sqlToUse = getInsert(settings) + getUpdate(settings) + delete;
+                    sqlToUse = getInsert(settings) + "\n" + getUpdate(settings) + "\n" + delete;
                     break;
                 case Strategy.MergeWithDelete:
-                    sqlToUse = getInsert(settings) + getUpdate(settings);
+                    sqlToUse = getInsert(settings) + "\n" + getUpdate(settings);
                     break;
                 case Strategy.AddOnly:
                     sqlToUse = getInsert(settings);
