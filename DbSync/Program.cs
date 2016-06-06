@@ -104,16 +104,23 @@ namespace DbSync
             }
             else
             {
-                var selectedJob = settings.Jobs.SingleOrDefault(j => j.Name.Equals(cmdArgs.Job, StringComparison.InvariantCultureIgnoreCase));
-                if (selectedJob == null)
+                var selectedJobs = cmdArgs.Job.Split(',').Select(j => j.ToLowerInvariant().Trim());
+                var jobs = settings.Jobs.Where(j => selectedJobs.Contains(j.Name.ToLowerInvariant()));
+                if (jobs.Any())
+                {
+                    foreach(var job in jobs)
+                    {
+                        if (cmdArgs.Interactive)
+                            new InteractiveMode(job, cmdArgs).Run();
+                        else
+                            RunJob(job, cmdArgs);
+                    }
+                }
+                else
                 {
                     Console.Error.WriteLine($"No job found that matches {cmdArgs.Job}");
                     return;
                 }
-                if (cmdArgs.Interactive)
-                    new InteractiveMode(selectedJob, cmdArgs).Run();
-                else
-                    RunJob(selectedJob, cmdArgs);
             }
         }
     }
