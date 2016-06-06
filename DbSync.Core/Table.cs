@@ -45,10 +45,15 @@ ORDER BY column_id
 
             var data = Fields.Select(f => f.ToLowerInvariant());
 
-            PrimaryKey = data.SingleOrDefault(f => f == "id" || f == BasicName.ToLowerInvariant() + "id");
-            
             if (PrimaryKey == null)
-                throw new DbSyncException($"No primary key found for table {Name}");
+            {
+                PrimaryKey = data.SingleOrDefault(f => f == "id" || f == BasicName.ToLowerInvariant() + "id");
+
+                if (PrimaryKey == null)
+                    throw new DbSyncException($"No primary key found for table {Name}");
+            }
+            else
+                PrimaryKey = PrimaryKey.ToLowerInvariant();
 
             data = data
                 .Where(f => f != PrimaryKey)
