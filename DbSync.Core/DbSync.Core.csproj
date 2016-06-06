@@ -65,14 +65,15 @@
     <Compile Include="XmlRecordDataReader.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Scripts\MergeWithDelete.sql" />
-    <EmbeddedResource Include="Scripts\MergeWithDeleteWithAudit.sql" />
-    <EmbeddedResource Include="Scripts\MergeWithoutDelete.sql" />
-    <EmbeddedResource Include="Scripts\MergeWithoutDeleteWithAudit.sql" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="DbSync.Core.nuspec" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Scripts\Delete.sql" />
+    <Content Include="Scripts\InsertWithAudit.sql" />
+    <Content Include="Scripts\Insert.sql" />
+    <Content Include="Scripts\Update.sql" />
+    <Content Include="Scripts\UpdateWithAudit.sql" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
