@@ -22,8 +22,14 @@ namespace DbSync.Core.Transfers
 
             connection.Execute(GetTempTableScript(table));
 
-			CopyFromFileToTable(connection, Path.Combine(settings.Path, table.Name), "##" + table.BasicName, table.Fields);
-
+            if (table.ByEnvironment)
+            {
+                if (File.Exists(table.EnvironmentSpecificFileName))
+                    CopyFromFileToTable(connection, table.EnvironmentSpecificFileName, "##" + table.BasicName, table.Fields);
+            }
+            else
+                CopyFromFileToTable(connection, Path.Combine(settings.Path, table.Name), "##" + table.BasicName, table.Fields);
+            
 			if (table.IsEnvironmentSpecific)
 				if (File.Exists(table.EnvironmentSpecificFileName))
 					CopyFromFileToTable(connection, table.EnvironmentSpecificFileName, "##" + table.BasicName, table.Fields);

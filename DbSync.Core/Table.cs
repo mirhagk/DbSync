@@ -20,6 +20,8 @@ namespace DbSync.Core
         public bool IsEnvironmentSpecific { get; set; }
         [XmlIgnore]
         public Merge.Strategy? MergeStrategy { get; set; }
+        [XmlAttribute]
+        public bool ByEnvironment { get; set; }
 
         [XmlAttribute(nameof(MergeStrategy))]
         private Merge.Strategy MergeStrategySerialized
