@@ -18,6 +18,22 @@ namespace DbSync.Core
         public string Name { get; set; }
         [XmlAttribute]
         public bool IsEnvironmentSpecific { get; set; }
+        [XmlIgnore]
+        public Merge.Strategy? MergeStrategy { get; set; }
+
+        [XmlAttribute(nameof(MergeStrategy))]
+        private Merge.Strategy MergeStrategySerialized
+        {
+            get
+            {
+                return MergeStrategy.Value;
+            }
+            set
+            {
+                MergeStrategy = value;
+            }
+        }
+        private bool ShouldSerializeMergeStrategySerialized() => MergeStrategy.HasValue;
         #endregion
 
         class Schema

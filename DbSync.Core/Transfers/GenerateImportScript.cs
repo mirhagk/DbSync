@@ -69,7 +69,7 @@ namespace DbSync.Core.Transfers
                             script += ImportScriptForFile(table, table.EnvironmentSpecificFileName);
 
 
-                    script += Merge.GetSqlForMergeStrategy(settings, table.QualifiedName, "##" + table.BasicName, table.PrimaryKey, table.DataFields);
+                    script += Merge.GetSqlForMergeStrategy(settings, table);
                 }
                 File.WriteAllText(Filename, script);
             }

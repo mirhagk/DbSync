@@ -58,9 +58,13 @@ namespace DbSync.Core
             sql += $"\nFROM {target} t\nINNER JOIN {source} s ON t.{primaryKey} = s.{primaryKey}";
             return sql;
         }
-        
-        public static string GetSqlForMergeStrategy(JobSettings settings, string target, string source, string primaryKey, IEnumerable<string> restOfColumns)
+
+        public static string GetSqlForMergeStrategy(JobSettings settings, Table table)
         {
+            var target = table.QualifiedName;
+            var source = "##" + table.BasicName;
+            var primaryKey = table.PrimaryKey;
+            var restOfColumns = table.DataFields;
             var configObject = new
             {
                 target = target,
@@ -75,7 +79,7 @@ namespace DbSync.Core
             };
             string sqlToUse = null;
 
-            switch (settings.MergeStrategy)
+            switch (table.MergeStrategy ?? settings.MergeStrategy)
             {
                 case Strategy.MergeWithoutDelete:
                     sqlToUse = getInsert(settings) + "\n" + getUpdate(settings) + "\n" + delete;

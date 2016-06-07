@@ -28,7 +28,7 @@ namespace DbSync.Core.Transfers
 				if (File.Exists(table.EnvironmentSpecificFileName))
 					CopyFromFileToTable(connection, table.EnvironmentSpecificFileName, "##" + table.BasicName, table.Fields);
 
-            connection.Execute(Merge.GetSqlForMergeStrategy(settings, table.QualifiedName, "##" + table.BasicName, table.PrimaryKey, table.DataFields));
+            connection.Execute(Merge.GetSqlForMergeStrategy(settings, table));
 		}
         public override void Run(JobSettings settings, string environment)
         {
