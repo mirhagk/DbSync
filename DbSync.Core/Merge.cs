@@ -91,7 +91,7 @@ namespace DbSync.Core
                     sqlToUse = getInsert(settings);
                     break;
                 case Strategy.Override:
-                    sqlToUse = overwriteSql(settings, target, source, primaryKey, restOfColumns);
+                    sqlToUse = getInsert(settings) + "\n" + overwriteSql(settings, target, source, primaryKey, restOfColumns);
                     break;
                 default:
                     throw new NotImplementedException("That merge strategy is not yet supported");
