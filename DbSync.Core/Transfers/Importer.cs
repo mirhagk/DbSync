@@ -34,7 +34,14 @@ namespace DbSync.Core.Transfers
 				if (File.Exists(table.EnvironmentSpecificFileName))
 					CopyFromFileToTable(connection, table.EnvironmentSpecificFileName, "##" + table.BasicName, table.Fields);
 
-            connection.Execute(Merge.GetSqlForMergeStrategy(settings, table));
+            try
+            {
+                connection.Execute(Merge.GetSqlForMergeStrategy(settings, table));
+            }
+            catch (SqlException ex)
+            {
+                throw new DbSyncException($"Error while importing {table.Name}: {ex.Message}");
+            }
 		}
         public override void Run(JobSettings settings, string environment)
         {
