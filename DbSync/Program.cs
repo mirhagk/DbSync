@@ -83,9 +83,8 @@ namespace DbSync
             {
                 var foregroundColor = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.Error.WriteLine($"Job failed because of error: {ex.Message}");
+                Console.Error.WriteLine($"Job failed");
                 Console.ForegroundColor = foregroundColor;
-                Console.ReadKey();
             }
             watch.Stop();
             Console.WriteLine($"Executed job {job.Name}, Elapsed {watch.ElapsedMilliseconds}ms");
