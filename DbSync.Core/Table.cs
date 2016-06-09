@@ -89,8 +89,7 @@ ORDER BY column_id
 
                 PrimaryKey = primaryKeys.Single().Name;
             }
-            else
-                PrimaryKey = PrimaryKey.ToLowerInvariant();
+            PrimaryKey = PrimaryKey.ToLowerInvariant();
 
             data = data
                 .Where(f => f != PrimaryKey)
