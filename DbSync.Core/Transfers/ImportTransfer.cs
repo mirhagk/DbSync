@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DbSync.Core.Services;
+using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace DbSync.Core.Transfers
 {
     public abstract class ImportTransfer : Transfer
     {
-        protected void CopyFromFileToTempTable(SqlConnection connection, string file, Table table)
+        protected void CopyFromFileToTempTable(SqlConnection connection, string file, Table table, IErrorHandler errorHandler)
         {
             var reader = new XmlRecordDataReader(file, table.Fields.Select(x=>x.Name).ToList());
 
@@ -17,8 +18,14 @@ namespace DbSync.Core.Transfers
             bulkCopy.BulkCopyTimeout = 120;
             bulkCopy.DestinationTableName = "##" + table.BasicName;
             bulkCopy.EnableStreaming = true;
-
-            bulkCopy.WriteToServer(reader);
+            try
+            {
+                bulkCopy.WriteToServer(reader);
+            }
+            catch(XmlRecordDataReader.XmlRecordDataReaderException ex)
+            {
+                errorHandler.Error($"Xml file contains the field {ex.Field} but the table does not contain it");
+            }
         }
         protected string GetTempTableScript(Table table)
         {
