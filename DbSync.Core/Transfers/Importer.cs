@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using DbSync.Core.Services;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -43,14 +44,14 @@ namespace DbSync.Core.Transfers
                 throw new DbSyncException($"Error while importing {table.Name}: {ex.Message}");
             }
 		}
-        public override void Run(JobSettings settings, string environment)
+        public override void Run(JobSettings settings, string environment, IErrorHandler errorHandler)
         {
             using (var conn = new SqlConnection(settings.ConnectionString))
             {
                 conn.Open();
                 foreach (var table in settings.Tables)
                 {
-                    table.Initialize(conn, settings);
+                    table.Initialize(conn, settings, errorHandler);
                     
                     ImportTable(conn, table, settings);
                 }

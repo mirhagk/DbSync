@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using DbSync.Core.Services;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -45,13 +46,13 @@ namespace DbSync.Core
 
         SqlConnection connection;
         JobSettings settings;
-        public void Initialize(SqlConnection connection, JobSettings settings)
+        public void Initialize(SqlConnection connection, JobSettings settings, IErrorHandler errorHandler)
         {
             this.connection = connection;
             this.settings = settings;
 
             Fields.AddRange(connection.Query<Schema>(@"
-SELECT c.Name 
+SELECT c.Name, c.is_identity as IsPrimaryKey
 FROM sys.all_objects o
 LEFT JOIN sys.all_columns c ON o.object_id = c.object_id
 LEFT JOIN sys.schemas s ON o.schema_id = s.schema_id
@@ -92,6 +93,11 @@ ORDER BY column_id
         public string QualifiedName => $"{SchemaName}.[{BasicName}]";
         [XmlIgnore]
         public string EnvironmentSpecificFileName => Path.Combine(settings.Path, Name) + "." + settings.CurrentEnvironment;
+        public class Field
+        {
+            public string Name { get; set; }
+            public bool IsPrimaryKey { get; set; }
+        }
         [XmlIgnore]
         public List<string> Fields { get; } = new List<string>();
         [XmlIgnore]

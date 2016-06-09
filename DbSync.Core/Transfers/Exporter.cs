@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DbSync.Core.Services;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -49,7 +50,7 @@ namespace DbSync.Core.Transfers
                 writer.Close();
             }
         }
-        public override void Run(JobSettings settings, string environment)
+        public override void Run(JobSettings settings, string environment, IErrorHandler errorHandler)
         {
             if (!Directory.Exists(settings.Path))
                 Directory.CreateDirectory(settings.Path);
@@ -58,7 +59,7 @@ namespace DbSync.Core.Transfers
                 conn.Open();
                 foreach (var table in settings.Tables)
                 {
-                    table.Initialize(conn, settings);
+                    table.Initialize(conn, settings, errorHandler);
 
                     using (var cmd = conn.CreateCommand())
                     {

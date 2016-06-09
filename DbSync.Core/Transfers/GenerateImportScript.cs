@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using DbSync.Core.Services;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -45,7 +46,7 @@ namespace DbSync.Core.Transfers
 
             return result;
         }
-        public override void Run(JobSettings settings, string environment)
+        public override void Run(JobSettings settings, string environment, IErrorHandler errorHandler)
         {
             using (var conn = new SqlConnection(settings.ConnectionString))
             {
@@ -54,7 +55,7 @@ namespace DbSync.Core.Transfers
 
                 foreach (var table in settings.Tables)
                 {
-                    table.Initialize(conn, settings);
+                    table.Initialize(conn, settings, errorHandler);
 
                     Console.WriteLine($"Generating import script for {table}");
                     var fields = table.Fields;

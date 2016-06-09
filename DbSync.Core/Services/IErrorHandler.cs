@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace DbSync.Core.Services
 {
-    interface IErrorHandler
+    public interface IErrorHandler
     {
         void Error(string message);
         void Warning(string message);
     }
-    public class DefaultErrorHandler
+    public class DefaultErrorHandler : IErrorHandler
     {
         void WriteInColour(string message, ConsoleColor color)
         {
@@ -21,9 +21,9 @@ namespace DbSync.Core.Services
             Console.Error.WriteLine(message);
             Console.ForegroundColor = foregroundColor;
         }
-        public bool ContinueOnError { get; set; }
-        public bool WarningsAsErrors { get; set; }
-        public bool PauseOnError { get; set; }
+        public bool ContinueOnError { get; set; } = false;
+        public bool WarningsAsErrors { get; set; } = false;
+        public bool PauseOnError { get; set; } = false;
         public void Error(string message)
         {
             WriteInColour($"Error: {message}", ConsoleColor.Red);

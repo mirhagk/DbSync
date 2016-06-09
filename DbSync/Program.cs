@@ -59,22 +59,23 @@ namespace DbSync
 
             try
             {
+                var errorHandler = new DbSync.Core.Services.DefaultErrorHandler();
                 job.CurrentEnvironment = cmdArgs.Environment;
                 if (cmdArgs.Export)
-                    Exporter.Instance.Run(job, cmdArgs.Environment);
+                    Exporter.Instance.Run(job, cmdArgs.Environment, errorHandler);
                 if (cmdArgs.Import)
-                    Importer.Instance.Run(job, cmdArgs.Environment);
+                    Importer.Instance.Run(job, cmdArgs.Environment, errorHandler);
                 if (cmdArgs.ImportDiff)
                 {
                     var importDiffGenerator = ImportDiffGenerator.Instance;
                     importDiffGenerator.Filename = cmdArgs.ImportScriptName;
-                    importDiffGenerator.Run(job, cmdArgs.Environment);
+                    importDiffGenerator.Run(job, cmdArgs.Environment, errorHandler);
                 }
                 if (cmdArgs.ImportScript)
                 {
                     var importScriptGenerator = GenerateImportScript.Instance;
                     importScriptGenerator.Filename = cmdArgs.ImportScriptName;
-                    GenerateImportScript.Instance.Run(job, cmdArgs.Environment);
+                    GenerateImportScript.Instance.Run(job, cmdArgs.Environment, errorHandler);
                 }
 
             }

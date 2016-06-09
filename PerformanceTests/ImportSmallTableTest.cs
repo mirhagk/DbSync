@@ -47,7 +47,7 @@ namespace PerformanceTests
         [CounterThroughputAssertion(nameof(ImportSmallTableTest),MustBe.GreaterThan,10000)]
         public void Run()
         {
-            DbSync.Core.Transfers.Importer.Instance.Run(settings, "test");
+            DbSync.Core.Transfers.Importer.Instance.Run(settings, "test", new DbSync.Core.Services.DefaultErrorHandler());
             counter.Increment();
         }
         [PerfCleanup]

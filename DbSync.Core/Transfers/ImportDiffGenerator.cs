@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using DbSync.Core.Services;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -50,7 +51,7 @@ LEFT JOIN {table.Name} t on d.{table.PrimaryKey} = t.{table.PrimaryKey}";
                     .Append($" WHERE {table.PrimaryKey} = {record[table.PrimaryKey]}");
             }
         }
-        public override void Run(JobSettings settings, string environment)
+        public override void Run(JobSettings settings, string environment, IErrorHandler errorHandler)
         {
             using (var conn = new SqlConnection(settings.ConnectionString))
             {
@@ -58,7 +59,7 @@ LEFT JOIN {table.Name} t on d.{table.PrimaryKey} = t.{table.PrimaryKey}";
                 conn.Open();
                 foreach (var table in settings.Tables)
                 {
-                    table.Initialize(conn, settings);
+                    table.Initialize(conn, settings, errorHandler);
 
                     ImportTable(conn, table, settings, generatedSql);
                 }
