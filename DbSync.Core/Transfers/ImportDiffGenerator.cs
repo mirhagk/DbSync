@@ -59,9 +59,8 @@ LEFT JOIN {table.Name} t on d.{table.PrimaryKey} = t.{table.PrimaryKey}";
                 conn.Open();
                 foreach (var table in settings.Tables)
                 {
-                    table.Initialize(conn, settings, errorHandler);
-
-                    ImportTable(conn, table, settings, generatedSql);
+                    if (table.Initialize(conn, settings, errorHandler))
+                        ImportTable(conn, table, settings, generatedSql);
                 }
                 File.WriteAllText(Filename, generatedSql.ToString());
             }

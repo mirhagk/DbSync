@@ -55,7 +55,8 @@ namespace DbSync.Core.Transfers
 
                 foreach (var table in settings.Tables)
                 {
-                    table.Initialize(conn, settings, errorHandler);
+                    if (!table.Initialize(conn, settings, errorHandler))
+                        continue;
 
                     Console.WriteLine($"Generating import script for {table}");
                     var fields = table.Fields;

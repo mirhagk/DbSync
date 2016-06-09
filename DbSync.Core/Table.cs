@@ -46,7 +46,7 @@ namespace DbSync.Core
 
         SqlConnection connection;
         JobSettings settings;
-        public void Initialize(SqlConnection connection, JobSettings settings, IErrorHandler errorHandler)
+        public bool Initialize(SqlConnection connection, JobSettings settings, IErrorHandler errorHandler)
         {
             this.connection = connection;
             this.settings = settings;
@@ -67,10 +67,24 @@ ORDER BY column_id
 
             if (PrimaryKey == null)
             {
-                PrimaryKey = data.SingleOrDefault(f => f == "id" || f == BasicName.ToLowerInvariant() + "id");
+                var primaryKeys = Fields.Where(f => f.IsPrimaryKey).ToList();
+                if (primaryKeys.Count == 0)
+                {
+                    errorHandler.Warning($"No primary key set for table {Name}, trying to infer from name");
+                    primaryKeys = Fields.Where(f => f.Name.ToLowerInvariant() == "id" || f.Name.ToLowerInvariant() == BasicName.ToLowerInvariant() + "id").ToList();
+                }
+                if (primaryKeys.Count > 1)
+                {
+                    errorHandler.Error($"Multiple primary keys found for table {Name} ({string.Join(", ", primaryKeys.Select(pk => pk.Name))}). Please specify one manually.");
+                    return false;
+                }
+                if (!primaryKeys.Any())
+                {
+                    errorHandler.Error($"No primary key could be found for table {Name}. Please specify one manually");
+                    return false;
+                }
 
-                if (PrimaryKey == null)
-                    throw new DbSyncException($"No primary key found for table {Name}");
+                PrimaryKey = primaryKeys.Single().Name;
             }
             else
                 PrimaryKey = PrimaryKey.ToLowerInvariant();
@@ -83,6 +97,7 @@ ORDER BY column_id
                 data = data.Where(f => f != "isenvironmentspecific");
 
             DataFields = data.ToList();
+            return true;
         }
 
         [XmlIgnore]

@@ -51,9 +51,8 @@ namespace DbSync.Core.Transfers
                 conn.Open();
                 foreach (var table in settings.Tables)
                 {
-                    table.Initialize(conn, settings, errorHandler);
-                    
-                    ImportTable(conn, table, settings);
+                    if (table.Initialize(conn, settings, errorHandler))
+                        ImportTable(conn, table, settings);
                 }
             }
         }

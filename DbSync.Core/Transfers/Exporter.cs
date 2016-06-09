@@ -59,7 +59,8 @@ namespace DbSync.Core.Transfers
                 conn.Open();
                 foreach (var table in settings.Tables)
                 {
-                    table.Initialize(conn, settings, errorHandler);
+                    if (!table.Initialize(conn, settings, errorHandler))
+                        continue;
 
                     using (var cmd = conn.CreateCommand())
                     {
