@@ -54,9 +54,10 @@ namespace DbSync.Core
 SELECT c.Name 
 FROM sys.all_objects o
 LEFT JOIN sys.all_columns c ON o.object_id = c.object_id
-WHERE o.name = @table
+LEFT JOIN sys.schemas s ON o.schema_id = s.schema_id
+WHERE o.name = @table AND s.name = @schema
 ORDER BY column_id
-", new { table = BasicName }).Select(x => x.Name));
+", new { table = BasicName, schema = SchemaName }).Select(x => x.Name));
 
             if (!Fields.Any())
                 throw new DbSyncException($"Could not find any information for table {Name}. Make sure it exists in the target database");
