@@ -15,7 +15,6 @@ namespace DbSync.Core.Services
     {
         void WriteInColour(string message, ConsoleColor color)
         {
-
             var foregroundColor = Console.ForegroundColor;
             Console.ForegroundColor = color;
             Console.Error.WriteLine(message);
