@@ -20,11 +20,11 @@ namespace DbSync.Core.Transfers
 
             connection.Execute(GetTempTableScript(table));
 
-            CopyFromFileToTable(connection, Path.Combine(settings.Path, table.Name), "##" + table.BasicName, table.Fields);
+            CopyFromFileToTempTable(connection, Path.Combine(settings.Path, table.Name), table);
 
             if (table.IsEnvironmentSpecific)
                 if (File.Exists(table.EnvironmentSpecificFileName))
-                    CopyFromFileToTable(connection, table.EnvironmentSpecificFileName, "##" + table.BasicName, table.Fields);
+                    CopyFromFileToTempTable(connection, table.EnvironmentSpecificFileName, table);
 
             var sql = $@"
 ;WITH Differences AS

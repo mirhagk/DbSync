@@ -51,19 +51,19 @@ namespace DbSync.Core
             this.connection = connection;
             this.settings = settings;
 
-            Fields.AddRange(connection.Query<Schema>(@"
+            Fields.AddRange(connection.Query<Field>(@"
 SELECT c.Name, c.is_identity as IsPrimaryKey
 FROM sys.all_objects o
 LEFT JOIN sys.all_columns c ON o.object_id = c.object_id
 LEFT JOIN sys.schemas s ON o.schema_id = s.schema_id
 WHERE o.name = @table AND s.name = @schema
 ORDER BY column_id
-", new { table = BasicName, schema = SchemaName }).Select(x => x.Name));
+", new { table = BasicName, schema = SchemaName }));
 
             if (!Fields.Any())
                 throw new DbSyncException($"Could not find any information for table {Name}. Make sure it exists in the target database");
 
-            var data = Fields.Select(f => f.ToLowerInvariant());
+            var data = Fields.Select(f => f.Name.ToLowerInvariant());
 
             if (PrimaryKey == null)
             {
@@ -99,7 +99,7 @@ ORDER BY column_id
             public bool IsPrimaryKey { get; set; }
         }
         [XmlIgnore]
-        public List<string> Fields { get; } = new List<string>();
+        public List<Field> Fields { get; } = new List<Field>();
         [XmlIgnore]
         public List<string> DataFields { get; private set; }
         [XmlAttribute]

@@ -9,13 +9,13 @@ namespace DbSync.Core.Transfers
 {
     public abstract class ImportTransfer : Transfer
     {
-        protected void CopyFromFileToTable(SqlConnection connection, string file, string table, List<string> fields)
+        protected void CopyFromFileToTempTable(SqlConnection connection, string file, Table table)
         {
-            var reader = new XmlRecordDataReader(file, fields);
+            var reader = new XmlRecordDataReader(file, table.Fields.Select(x=>x.Name).ToList());
 
             SqlBulkCopy bulkCopy = new SqlBulkCopy(connection);
             bulkCopy.BulkCopyTimeout = 120;
-            bulkCopy.DestinationTableName = table;
+            bulkCopy.DestinationTableName = "##" + table.BasicName;
             bulkCopy.EnableStreaming = true;
 
             bulkCopy.WriteToServer(reader);
@@ -25,7 +25,7 @@ namespace DbSync.Core.Transfers
             return $@"IF OBJECT_ID('tempdb..##{table.BasicName}') IS NOT NULL
 	DROP TABLE ##{table.BasicName}
 
-CREATE TABLE ##{table.BasicName}( " + string.Join(", ", table.Fields.Select(f => $"[{f}] NVARCHAR(MAX) NULL")) + ")";
+CREATE TABLE ##{table.BasicName}( " + string.Join(", ", table.Fields.Select(f => $"[{f.Name}] NVARCHAR(MAX) NULL")) + ")";
         }
     }
 }
