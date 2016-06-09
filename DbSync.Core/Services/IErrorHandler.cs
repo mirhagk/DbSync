@@ -21,9 +21,9 @@ namespace DbSync.Core.Services
             Console.Error.WriteLine(message);
             Console.ForegroundColor = foregroundColor;
         }
-        public bool ContinueOnError { get; set; } = false;
-        public bool WarningsAsErrors { get; set; } = false;
-        public bool PauseOnError { get; set; } = false;
+        public bool ContinueOnError { get; set; } = true;
+        public bool WarningsAsErrors { get; set; } = true;
+        public bool PauseOnError { get; set; } = true;
         public void Error(string message)
         {
             WriteInColour($"Error: {message}", ConsoleColor.Red);

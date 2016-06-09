@@ -61,7 +61,10 @@ ORDER BY column_id
 ", new { table = BasicName, schema = SchemaName }));
 
             if (!Fields.Any())
-                throw new DbSyncException($"Could not find any information for table {Name}. Make sure it exists in the target database");
+            {
+                errorHandler.Error($"Could not find any information for table {Name}. Make sure it exists in the target database");
+                return false;
+            }
 
             var data = Fields.Select(f => f.Name.ToLowerInvariant());
 
