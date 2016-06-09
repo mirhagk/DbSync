@@ -24,7 +24,7 @@ namespace DbSync.Core.Transfers
             }
             catch(XmlRecordDataReader.XmlRecordDataReaderException ex)
             {
-                errorHandler.Error($"Xml file contains the field {ex.Field} but the table does not contain it");
+                errorHandler.Error($"Xml file contains the field {ex.Field} but the table does not contain it. Make sure the schema matches");
             }
         }
         protected string GetTempTableScript(Table table)
