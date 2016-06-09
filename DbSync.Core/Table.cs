@@ -73,7 +73,7 @@ ORDER BY column_id
                 var primaryKeys = Fields.Where(f => f.IsPrimaryKey).ToList();
                 if (primaryKeys.Count == 0)
                 {
-                    errorHandler.Warning($"No primary key set for table {Name}, trying to infer from name");
+                    //errorHandler.Warning($"No primary key set for table {Name}, trying to infer from name");
                     primaryKeys = Fields.Where(f => f.Name.ToLowerInvariant() == "id" || f.Name.ToLowerInvariant() == BasicName.ToLowerInvariant() + "id").ToList();
                 }
                 if (primaryKeys.Count > 1)
