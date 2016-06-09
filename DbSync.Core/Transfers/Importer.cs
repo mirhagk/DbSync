@@ -26,14 +26,14 @@ namespace DbSync.Core.Transfers
             if (table.ByEnvironment)
             {
                 if (File.Exists(table.EnvironmentSpecificFileName))
-                    CopyFromFileToTempTable(connection, table.EnvironmentSpecificFileName, table);
+                    CopyFromFileToTempTable(connection, table.EnvironmentSpecificFileName, table, errorHandler);
             }
             else
-                CopyFromFileToTempTable(connection, Path.Combine(settings.Path, table.Name), table);
+                CopyFromFileToTempTable(connection, Path.Combine(settings.Path, table.Name), table, errorHandler);
             
 			if (table.IsEnvironmentSpecific)
 				if (File.Exists(table.EnvironmentSpecificFileName))
-					CopyFromFileToTempTable(connection, table.EnvironmentSpecificFileName, table);
+					CopyFromFileToTempTable(connection, table.EnvironmentSpecificFileName, table, errorHandler);
 
             try
             {
