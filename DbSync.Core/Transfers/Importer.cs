@@ -17,7 +17,7 @@ namespace DbSync.Core.Transfers
     {
         public static Importer Instance = new Importer();
         private Importer() { }
-		void ImportTable(SqlConnection connection, Table table, JobSettings settings)
+		void ImportTable(SqlConnection connection, Table table, JobSettings settings, IErrorHandler errorHandler)
 		{
 			Console.WriteLine($"Importing table {table.Name}");
 
@@ -41,7 +41,7 @@ namespace DbSync.Core.Transfers
             }
             catch (SqlException ex)
             {
-                throw new DbSyncException($"Error while importing {table.Name}: {ex.Message}");
+                errorHandler.Error($"Error while importing {table.Name}: {ex.Message}");
             }
 		}
         public override void Run(JobSettings settings, string environment, IErrorHandler errorHandler)
@@ -52,7 +52,7 @@ namespace DbSync.Core.Transfers
                 foreach (var table in settings.Tables)
                 {
                     if (table.Initialize(conn, settings, errorHandler))
-                        ImportTable(conn, table, settings);
+                        ImportTable(conn, table, settings, errorHandler);
                 }
             }
         }
