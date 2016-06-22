@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DbSync.Core.Services;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,6 @@ namespace DbSync.Core.Transfers
 {
     public abstract class Transfer
     {
-        public abstract void Run(JobSettings settings, string environment);
+        public abstract void Run(JobSettings settings, string environment, IErrorHandler errorHandler);
     }
 }
