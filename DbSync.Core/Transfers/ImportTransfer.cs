@@ -12,7 +12,7 @@ namespace DbSync.Core.Transfers
     {
         protected void CopyFromFileToTempTable(SqlConnection connection, string file, Table table, IErrorHandler errorHandler)
         {
-            var reader = new XmlRecordDataReader(file, table.Fields);
+            var reader = new XmlRecordDataReader(file, table);
 
             SqlBulkCopy bulkCopy = new SqlBulkCopy(connection);
             bulkCopy.BulkCopyTimeout = 120;

@@ -23,6 +23,10 @@ namespace DbSync.Core.Transfers
 
             connection.Execute(GetTempTableScript(table));
 
+            var mergeStrategy = table.MergeStrategy ?? settings.MergeStrategy;
+
+            table.UseDefaults = mergeStrategy != Merge.Strategy.Override; 
+
             if (table.ByEnvironment)
             {
                 if (File.Exists(table.EnvironmentSpecificFileName))

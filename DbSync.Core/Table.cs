@@ -133,5 +133,6 @@ ORDER BY column_id
         public List<string> DataFields { get; private set; }
         [XmlAttribute]
         public string PrimaryKey { get; set; }
+        public bool UseDefaults { get; set; }
     }
 }

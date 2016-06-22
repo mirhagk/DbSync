@@ -22,9 +22,11 @@ namespace DbSync
         Dictionary<string, object> currentRecord;
         XmlReader xmlReader;
         List<Table.Field> fields;
-        public XmlRecordDataReader(string path, List<Table.Field> fields)
+        Table table;
+        public XmlRecordDataReader(string path, Table table)
         {
-            this.fields = fields;
+            this.table = table;
+            fields = table.Fields;
             xmlReader = XmlReader.Create(path, new XmlReaderSettings { Async = true });
         }
         public object this[string name]
@@ -192,12 +194,11 @@ namespace DbSync
                 return null;
             if (currentRecord.ContainsKey(fields[i].CanonicalName))
                 return currentRecord[fields[i].CanonicalName];
+            if (fields[i].IsNullable || !table.UseDefaults)
+                return null;
             if (fields[i].DefaultValue != null)
                 return TrimBrackets(fields[i].DefaultValue);
-            else if (fields[i].IsNullable)
-                return null;
-            else
-                throw new NoDefaultException { Field = fields[i].Name };
+            throw new NoDefaultException { Field = fields[i].Name };
         }
 
         public int GetValues(object[] values)
