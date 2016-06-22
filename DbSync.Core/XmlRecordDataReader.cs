@@ -179,7 +179,13 @@ namespace DbSync
         {
             throw new NotImplementedException();
         }
-
+        string TrimBrackets(string value)
+        {
+            value = value.Trim();
+            if (value.StartsWith("(") && value.EndsWith(")"))
+                return TrimBrackets(value.Substring(1, value.Length - 2));
+            return value;
+        }
         public object GetValue(int i)
         {
             if (fields[i].IsAuditingColumn)//Ignore auditing columns
@@ -187,7 +193,7 @@ namespace DbSync
             if (currentRecord.ContainsKey(fields[i].CanonicalName))
                 return currentRecord[fields[i].CanonicalName];
             if (fields[i].DefaultValue != null)
-                return fields[i].DefaultValue;
+                return TrimBrackets(fields[i].DefaultValue);
             else if (fields[i].IsNullable)
                 return null;
             else
