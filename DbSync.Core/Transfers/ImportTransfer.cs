@@ -26,6 +26,10 @@ namespace DbSync.Core.Transfers
             {
                 errorHandler.Error($"Xml file contains the field {ex.Field} but the table does not contain it. Make sure the schema matches");
             }
+            catch(XmlRecordDataReader.NoDefaultException ex)
+            {
+                errorHandler.Error($"Data file does not contain any value for `{ex.Field}` but the column is not nullable and does not have a default value");
+            }
         }
         protected string GetTempTableScript(Table table)
         {
