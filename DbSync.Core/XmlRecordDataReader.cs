@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DbSync.Core;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -16,10 +17,10 @@ namespace DbSync
         }
         Dictionary<string, object> currentRecord;
         XmlReader xmlReader;
-        List<string> fields;
-        public XmlRecordDataReader(string path, List<string> fields)
+        List<Table.Field> fields;
+        public XmlRecordDataReader(string path, List<Table.Field> fields)
         {
-            this.fields = fields.Select(f => f.ToLowerInvariant()).ToList();
+            this.fields = fields;
             xmlReader = XmlReader.Create(path, new XmlReaderSettings { Async = true });
         }
         public object this[string name]
@@ -177,8 +178,8 @@ namespace DbSync
 
         public object GetValue(int i)
         {
-            if (currentRecord.ContainsKey(fields[i]))
-                return currentRecord[fields[i]];
+            if (currentRecord.ContainsKey(fields[i].CanonicalName))
+                return currentRecord[fields[i].CanonicalName];
             return null;
         }
 
@@ -189,7 +190,7 @@ namespace DbSync
 
         public bool IsDBNull(int i)
         {
-            return !currentRecord.ContainsKey(fields[i]);
+            return !currentRecord.ContainsKey(fields[i].CanonicalName);
         }
 
         public bool NextResult()
@@ -208,7 +209,7 @@ namespace DbSync
             
             for (int p = 0; p < xmlReader.AttributeCount; p++)
             {
-                if (!fields.Contains(xmlReader.Name.ToLowerInvariant()))
+                if (!fields.Any(f=>f.CanonicalName == xmlReader.Name.ToLowerInvariant()))
                     throw new XmlRecordDataReaderException { Field = xmlReader.Name };
                 currentRecord[xmlReader.Name.ToLowerInvariant()] = xmlReader.GetValueAsync().Result;
                 xmlReader.MoveToNextAttribute();
