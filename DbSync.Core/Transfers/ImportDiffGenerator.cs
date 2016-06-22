@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using DbSync.Core.Services;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -13,17 +14,17 @@ namespace DbSync.Core.Transfers
     {
         public static ImportDiffGenerator Instance = new ImportDiffGenerator();
         public string Filename { get; set; }
-        void ImportTable(SqlConnection connection, Table table, JobSettings settings, StringBuilder generatedSql)
+        void ImportTable(SqlConnection connection, Table table, JobSettings settings, StringBuilder generatedSql, IErrorHandler errorHandler)
         {
             Console.WriteLine($"Generating diff for table {table.Name}");
 
             connection.Execute(GetTempTableScript(table));
 
-            CopyFromFileToTable(connection, Path.Combine(settings.Path, table.Name), "##" + table.BasicName, table.Fields);
+            CopyFromFileToTempTable(connection, Path.Combine(settings.Path, table.Name), table, errorHandler);
 
             if (table.IsEnvironmentSpecific)
                 if (File.Exists(table.EnvironmentSpecificFileName))
-                    CopyFromFileToTable(connection, table.EnvironmentSpecificFileName, "##" + table.BasicName, table.Fields);
+                    CopyFromFileToTempTable(connection, table.EnvironmentSpecificFileName, table, errorHandler);
 
             var sql = $@"
 ;WITH Differences AS
@@ -50,7 +51,7 @@ LEFT JOIN {table.Name} t on d.{table.PrimaryKey} = t.{table.PrimaryKey}";
                     .Append($" WHERE {table.PrimaryKey} = {record[table.PrimaryKey]}");
             }
         }
-        public override void Run(JobSettings settings, string environment)
+        public override void Run(JobSettings settings, string environment, IErrorHandler errorHandler)
         {
             using (var conn = new SqlConnection(settings.ConnectionString))
             {
@@ -58,9 +59,8 @@ LEFT JOIN {table.Name} t on d.{table.PrimaryKey} = t.{table.PrimaryKey}";
                 conn.Open();
                 foreach (var table in settings.Tables)
                 {
-                    table.Initialize(conn, settings);
-
-                    ImportTable(conn, table, settings, generatedSql);
+                    if (table.Initialize(conn, settings, errorHandler))
+                        ImportTable(conn, table, settings, generatedSql, errorHandler);
                 }
                 File.WriteAllText(Filename, generatedSql.ToString());
             }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DbSync.Core.Services;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -36,7 +37,7 @@ namespace DbSync.Core.Transfers
                     for (int i = 0; i < reader.FieldCount; i++)
                     {
                         var fieldName = reader.GetName(i);
-                        if (settings.IgnoreAuditColumnsOnExport && settings.IsAuditColumn(fieldName))
+                        if (settings.IgnoreAuditColumnsOnExport.Value && settings.IsAuditColumn(fieldName))
                             continue;
                         if (reader.IsDBNull(i))//for null values just don't output the attribute at all
                             continue;
@@ -49,7 +50,7 @@ namespace DbSync.Core.Transfers
                 writer.Close();
             }
         }
-        public override void Run(JobSettings settings, string environment)
+        public override void Run(JobSettings settings, string environment, IErrorHandler errorHandler)
         {
             if (!Directory.Exists(settings.Path))
                 Directory.CreateDirectory(settings.Path);
@@ -58,7 +59,8 @@ namespace DbSync.Core.Transfers
                 conn.Open();
                 foreach (var table in settings.Tables)
                 {
-                    table.Initialize(conn, settings);
+                    if (!table.Initialize(conn, settings, errorHandler))
+                        continue;
 
                     using (var cmd = conn.CreateCommand())
                     {

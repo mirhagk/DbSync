@@ -10,12 +10,16 @@ namespace DbSync
 {
     class XmlRecordDataReader : IDataReader
     {
+        public class XmlRecordDataReaderException : Exception
+        {
+            public string Field { get; set; }
+        }
         Dictionary<string, object> currentRecord;
         XmlReader xmlReader;
         List<string> fields;
         public XmlRecordDataReader(string path, List<string> fields)
         {
-            this.fields = fields;
+            this.fields = fields.Select(f => f.ToLowerInvariant()).ToList();
             xmlReader = XmlReader.Create(path, new XmlReaderSettings { Async = true });
         }
         public object this[string name]
@@ -204,9 +208,9 @@ namespace DbSync
             
             for (int p = 0; p < xmlReader.AttributeCount; p++)
             {
-                if (!fields.Contains(xmlReader.Name))
-                    fields.Add(xmlReader.Name);
-                currentRecord[xmlReader.Name] = xmlReader.GetValueAsync().Result;
+                if (!fields.Contains(xmlReader.Name.ToLowerInvariant()))
+                    throw new XmlRecordDataReaderException { Field = xmlReader.Name };
+                currentRecord[xmlReader.Name.ToLowerInvariant()] = xmlReader.GetValueAsync().Result;
                 xmlReader.MoveToNextAttribute();
             }
             return true;

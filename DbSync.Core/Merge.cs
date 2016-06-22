@@ -12,7 +12,7 @@ namespace DbSync.Core
     {
         public enum Strategy
         {
-            MergeWithoutDelete, MergeWithDelete, Add, Overwrite
+            MergeWithoutDelete, MergeWithDelete, AddOnly, Override
         }
         private static string loadScript(string scriptName)
         {
@@ -30,13 +30,41 @@ namespace DbSync.Core
                 .GetManifestResourceStream(manifestResourceName);
             return new StreamReader(stream).ReadToEnd();
         }
-        private static string mergeWithoutDeleteSQL = loadScript(nameof(mergeWithDeleteSQL));
-        private static string mergeWithDeleteSQL = loadScript(nameof(mergeWithDeleteSQL));
-        private static string mergeWithoutDeleteWithAuditSQL = loadScript(nameof(mergeWithoutDeleteWithAuditSQL));
-        private static string mergeWithDeleteWithAuditSQL = loadScript(nameof(mergeWithDeleteWithAuditSQL));
-
-        public static string GetSqlForMergeStrategy(JobSettings settings, string target, string source, string primaryKey, IEnumerable<string> restOfColumns)
+        static string delete = loadScript(nameof(delete));
+        static string insert = loadScript(nameof(insert));
+        static string insertWithAudit = loadScript(nameof(insertWithAudit));
+        static string update = loadScript(nameof(update));
+        static string updateWithAudit = loadScript(nameof(updateWithAudit));
+        static string getUpdate(JobSettings settings) => settings.UseAuditColumnsOnImport.Value ? updateWithAudit : update;
+        static string getInsert(JobSettings settings) => settings.UseAuditColumnsOnImport.Value ? insertWithAudit : insert;
+        static string overwriteSql(JobSettings settings, string target, string source, string primaryKey, IEnumerable<string> restOfColumns)
         {
+            string sql = $"UPDATE t SET ";
+            var firstColumn = true;
+            foreach(var column in restOfColumns)
+            {
+                if (firstColumn)
+                    firstColumn = false;
+                else
+                    sql += ",\n";
+                sql += $"[{column}] = ISNULL(s.[{column}],t.[{column}])";
+            }
+            if (settings.UseAuditColumnsOnImport.Value)
+            {
+                sql+= @",
+@modifiedUser = SUSER_NAME(),
+@modifiedDate = GETDATE()";
+            }
+            sql += $"\nFROM {target} t\nINNER JOIN {source} s ON t.{primaryKey} = s.{primaryKey}";
+            return sql;
+        }
+
+        public static string GetSqlForMergeStrategy(JobSettings settings, Table table)
+        {
+            var target = table.QualifiedName;
+            var source = "##" + table.BasicName;
+            var primaryKey = table.PrimaryKey;
+            var restOfColumns = table.DataFields;
             var configObject = new
             {
                 target = target,
@@ -50,19 +78,20 @@ namespace DbSync.Core
                 createdDate = settings.AuditColumns?.CreatedDate
             };
             string sqlToUse = null;
-            switch (settings.MergeStrategy)
+
+            switch (table.MergeStrategy ?? settings.MergeStrategy)
             {
                 case Strategy.MergeWithoutDelete:
-                    if (settings.UseAuditColumnsOnImport)
-                        sqlToUse =  mergeWithoutDeleteWithAuditSQL;
-                    else
-                        sqlToUse = mergeWithoutDeleteSQL;
+                    sqlToUse = getInsert(settings) + "\n" + getUpdate(settings);
                     break;
                 case Strategy.MergeWithDelete:
-                    if (settings.UseAuditColumnsOnImport)
-                        sqlToUse = mergeWithDeleteWithAuditSQL;
-                    else
-                        sqlToUse = mergeWithDeleteSQL;
+                    sqlToUse = getInsert(settings) + "\n" + getUpdate(settings) + "\n" + delete;
+                    break;
+                case Strategy.AddOnly:
+                    sqlToUse = getInsert(settings);
+                    break;
+                case Strategy.Override:
+                    sqlToUse = getInsert(settings) + "\n" + overwriteSql(settings, target, source, primaryKey, restOfColumns);
                     break;
                 default:
                     throw new NotImplementedException("That merge strategy is not yet supported");

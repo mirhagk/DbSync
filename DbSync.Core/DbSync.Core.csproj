@@ -50,6 +50,7 @@
   <ItemGroup>
     <Compile Include="DbSyncException.cs" />
     <Compile Include="DictionaryDataReader.cs" />
+    <Compile Include="Services\IErrorHandler.cs" />
     <Compile Include="Transfers\Exporter.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Transfers\GenerateImportScript.cs" />
@@ -65,14 +66,15 @@
     <Compile Include="XmlRecordDataReader.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Scripts\MergeWithDelete.sql" />
-    <EmbeddedResource Include="Scripts\MergeWithDeleteWithAudit.sql" />
-    <EmbeddedResource Include="Scripts\MergeWithoutDelete.sql" />
-    <EmbeddedResource Include="Scripts\MergeWithoutDeleteWithAudit.sql" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="DbSync.Core.nuspec" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Scripts\Delete.sql" />
+    <EmbeddedResource Include="Scripts\InsertWithAudit.sql" />
+    <EmbeddedResource Include="Scripts\Insert.sql" />
+    <EmbeddedResource Include="Scripts\Update.sql" />
+    <EmbeddedResource Include="Scripts\UpdateWithAudit.sql" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

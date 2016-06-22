@@ -23,9 +23,15 @@ namespace DbSync.Tests
             {
                 Name = "dbo.SmallTable",
             });
+            Table table = new Table();
+            table.PrimaryKey = "testID";
+            table.Name = "testTable";
+            //table.DataFields = new[] { "testColumn1", "testColumn2", "testColumn3" }
+            table.MergeStrategy = null;
 
-            var sql = Merge.GetSqlForMergeStrategy(settings, "testTarget", "testSource", "testID", (new[] { "testColumn1", "testColumn2", "testColumn3" }));
-            Assert.IsTrue(sql.Contains("testSource"));
+            var sql = Merge.GetSqlForMergeStrategy(settings, table);
+            Assert.IsTrue(sql.Contains("testTable"));
+            Assert.IsTrue(sql.Contains("##testTable"));
             Assert.IsTrue(sql.Contains("testID"));
             Assert.IsTrue(sql.Contains("testColumn1"));
             Assert.IsTrue(sql.Contains("testColumn1"));

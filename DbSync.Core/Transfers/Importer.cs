@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using DbSync.Core.Services;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -16,30 +17,42 @@ namespace DbSync.Core.Transfers
     {
         public static Importer Instance = new Importer();
         private Importer() { }
-		void ImportTable(SqlConnection connection, Table table, JobSettings settings)
+		void ImportTable(SqlConnection connection, Table table, JobSettings settings, IErrorHandler errorHandler)
 		{
 			Console.WriteLine($"Importing table {table.Name}");
 
             connection.Execute(GetTempTableScript(table));
 
-			CopyFromFileToTable(connection, Path.Combine(settings.Path, table.Name), "##" + table.BasicName, table.Fields);
-
+            if (table.ByEnvironment)
+            {
+                if (File.Exists(table.EnvironmentSpecificFileName))
+                    CopyFromFileToTempTable(connection, table.EnvironmentSpecificFileName, table, errorHandler);
+            }
+            else
+                CopyFromFileToTempTable(connection, Path.Combine(settings.Path, table.Name), table, errorHandler);
+            
 			if (table.IsEnvironmentSpecific)
 				if (File.Exists(table.EnvironmentSpecificFileName))
-					CopyFromFileToTable(connection, table.EnvironmentSpecificFileName, "##" + table.BasicName, table.Fields);
+					CopyFromFileToTempTable(connection, table.EnvironmentSpecificFileName, table, errorHandler);
 
-            connection.Execute(Merge.GetSqlForMergeStrategy(settings, table.QualifiedName, "##" + table.BasicName, table.PrimaryKey, table.DataFields));
+            try
+            {
+                connection.Execute(Merge.GetSqlForMergeStrategy(settings, table));
+            }
+            catch (SqlException ex)
+            {
+                errorHandler.Error($"Error while importing {table.Name}: {ex.Message}");
+            }
 		}
-        public override void Run(JobSettings settings, string environment)
+        public override void Run(JobSettings settings, string environment, IErrorHandler errorHandler)
         {
             using (var conn = new SqlConnection(settings.ConnectionString))
             {
                 conn.Open();
                 foreach (var table in settings.Tables)
                 {
-                    table.Initialize(conn, settings);
-                    
-                    ImportTable(conn, table, settings);
+                    if (table.Initialize(conn, settings, errorHandler))
+                        ImportTable(conn, table, settings, errorHandler);
                 }
             }
         }

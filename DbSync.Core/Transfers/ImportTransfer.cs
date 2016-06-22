@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DbSync.Core.Services;
+using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
@@ -9,23 +10,29 @@ namespace DbSync.Core.Transfers
 {
     public abstract class ImportTransfer : Transfer
     {
-        protected void CopyFromFileToTable(SqlConnection connection, string file, string table, List<string> fields)
+        protected void CopyFromFileToTempTable(SqlConnection connection, string file, Table table, IErrorHandler errorHandler)
         {
-            var reader = new XmlRecordDataReader(file, fields);
+            var reader = new XmlRecordDataReader(file, table.Fields.Select(x=>x.Name).ToList());
 
             SqlBulkCopy bulkCopy = new SqlBulkCopy(connection);
             bulkCopy.BulkCopyTimeout = 120;
-            bulkCopy.DestinationTableName = table;
+            bulkCopy.DestinationTableName = "##" + table.BasicName;
             bulkCopy.EnableStreaming = true;
-
-            bulkCopy.WriteToServer(reader);
+            try
+            {
+                bulkCopy.WriteToServer(reader);
+            }
+            catch(XmlRecordDataReader.XmlRecordDataReaderException ex)
+            {
+                errorHandler.Error($"Xml file contains the field {ex.Field} but the table does not contain it. Make sure the schema matches");
+            }
         }
         protected string GetTempTableScript(Table table)
         {
             return $@"IF OBJECT_ID('tempdb..##{table.BasicName}') IS NOT NULL
 	DROP TABLE ##{table.BasicName}
 
-CREATE TABLE ##{table.BasicName}( " + string.Join(", ", table.Fields.Select(f => $"[{f}] NVARCHAR(MAX) NULL")) + ")";
+CREATE TABLE ##{table.BasicName}( " + string.Join(", ", table.Fields.Select(f => $"[{f.Name}] NVARCHAR(MAX) NULL")) + ")";
         }
     }
 }
