@@ -182,6 +182,8 @@ namespace DbSync
 
         public object GetValue(int i)
         {
+            if (fields[i].IsAuditingColumn)//Ignore auditing columns
+                return null;
             if (currentRecord.ContainsKey(fields[i].CanonicalName))
                 return currentRecord[fields[i].CanonicalName];
             if (fields[i].DefaultValue != null)
