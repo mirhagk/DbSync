@@ -57,8 +57,16 @@ FROM sys.all_objects o
 INNER JOIN sys.all_columns c ON o.object_id = c.object_id
 INNER JOIN sys.schemas s ON o.schema_id = s.schema_id
 LEFT JOIN sys.default_constraints df ON c.default_object_id =  df.object_id
+WHERE o.Name = @table AND s.Name = @schema
 ORDER BY column_id
 ", new { table = BasicName, schema = SchemaName }));
+
+            var auditColumns = settings.AuditColumns.AuditColumnNames().Select(c => c.ToLowerInvariant()).ToList();
+            foreach (var field in Fields)
+            {
+                if (auditColumns.Contains(field.CanonicalName))
+                    field.IsAuditingColumn = true;
+            }
 
             if (!Fields.Any())
             {
@@ -116,6 +124,7 @@ ORDER BY column_id
             public string CanonicalName => Name.ToLowerInvariant();
             public bool IsPrimaryKey { get; set; }
             public bool IsNullable { get; set; }
+            public bool IsAuditingColumn { get; set; }
             public string DefaultValue { get; set; }
         }
         [XmlIgnore]
