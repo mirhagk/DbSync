@@ -15,6 +15,10 @@ namespace DbSync
         {
             public string Field { get; set; }
         }
+        public class NoDefaultException: Exception
+        {
+            public string Field { get; set; }
+        }
         Dictionary<string, object> currentRecord;
         XmlReader xmlReader;
         List<Table.Field> fields;
@@ -180,7 +184,12 @@ namespace DbSync
         {
             if (currentRecord.ContainsKey(fields[i].CanonicalName))
                 return currentRecord[fields[i].CanonicalName];
-            return null;
+            if (fields[i].DefaultValue != null)
+                return fields[i].DefaultValue;
+            else if (fields[i].IsNullable)
+                return null;
+            else
+                throw new NoDefaultException { Field = fields[i].Name };
         }
 
         public int GetValues(object[] values)
@@ -190,7 +199,9 @@ namespace DbSync
 
         public bool IsDBNull(int i)
         {
-            return !currentRecord.ContainsKey(fields[i].CanonicalName);
+            if (fields[i].IsNullable)
+                return !currentRecord.ContainsKey(fields[i].CanonicalName);
+            return false;
         }
 
         public bool NextResult()
