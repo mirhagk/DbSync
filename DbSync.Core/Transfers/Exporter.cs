@@ -71,7 +71,9 @@ namespace DbSync.Core.Transfers
                         }
                         cmd.CommandType = CommandType.Text;
 
-                        WriteQueryToXmlFile(cmd, Path.Combine(settings.Path, table.Name), settings);
+                        var fileName = Path.Combine(settings.Path, table.Name) + ".xml";
+                        
+                        WriteQueryToXmlFile(cmd, fileName, settings);
 
                         if (table.IsEnvironmentSpecific)
                         {

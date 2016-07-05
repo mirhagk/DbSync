@@ -117,7 +117,7 @@ ORDER BY column_id
         [XmlIgnore]
         public string QualifiedName => $"{SchemaName}.[{BasicName}]";
         [XmlIgnore]
-        public string EnvironmentSpecificFileName => Path.Combine(settings.Path, Name) + "." + settings.CurrentEnvironment;
+        public string EnvironmentSpecificFileName => Path.Combine(settings.Path, Name) + "." + settings.CurrentEnvironment + ".xml";
         public class Field
         {
             public string Name { get; set; }

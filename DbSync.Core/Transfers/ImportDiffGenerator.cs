@@ -20,7 +20,7 @@ namespace DbSync.Core.Transfers
 
             connection.Execute(GetTempTableScript(table));
 
-            CopyFromFileToTempTable(connection, Path.Combine(settings.Path, table.Name), table, errorHandler);
+            CopyFromFileToTempTable(connection, Path.Combine(settings.Path, table.Name)+".xml", table, errorHandler);
 
             if (table.IsEnvironmentSpecific)
                 if (File.Exists(table.EnvironmentSpecificFileName))
