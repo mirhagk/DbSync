@@ -12,7 +12,7 @@ namespace DbSync.Core.Transfers
     {
         protected void CopyFromFileToTempTable(SqlConnection connection, string file, Table table, IErrorHandler errorHandler)
         {
-            var reader = new XmlRecordDataReader(file, table.Fields.Select(x=>x.Name).ToList());
+            var reader = new XmlRecordDataReader(file, table);
 
             SqlBulkCopy bulkCopy = new SqlBulkCopy(connection);
             bulkCopy.BulkCopyTimeout = 120;
@@ -25,6 +25,10 @@ namespace DbSync.Core.Transfers
             catch(XmlRecordDataReader.XmlRecordDataReaderException ex)
             {
                 errorHandler.Error($"Xml file contains the field {ex.Field} but the table does not contain it. Make sure the schema matches");
+            }
+            catch(XmlRecordDataReader.NoDefaultException ex)
+            {
+                errorHandler.Error($"Data file does not contain any value for `{ex.Field}` but the column is not nullable and does not have a default value");
             }
         }
         protected string GetTempTableScript(Table table)

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DbSync.Core;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -14,12 +15,18 @@ namespace DbSync
         {
             public string Field { get; set; }
         }
+        public class NoDefaultException: Exception
+        {
+            public string Field { get; set; }
+        }
         Dictionary<string, object> currentRecord;
         XmlReader xmlReader;
-        List<string> fields;
-        public XmlRecordDataReader(string path, List<string> fields)
+        List<Table.Field> fields;
+        Table table;
+        public XmlRecordDataReader(string path, Table table)
         {
-            this.fields = fields.Select(f => f.ToLowerInvariant()).ToList();
+            this.table = table;
+            fields = table.Fields;
             xmlReader = XmlReader.Create(path, new XmlReaderSettings { Async = true });
         }
         public object this[string name]
@@ -174,12 +181,24 @@ namespace DbSync
         {
             throw new NotImplementedException();
         }
-
+        string TrimBrackets(string value)
+        {
+            value = value.Trim();
+            if (value.StartsWith("(") && value.EndsWith(")"))
+                return TrimBrackets(value.Substring(1, value.Length - 2));
+            return value;
+        }
         public object GetValue(int i)
         {
-            if (currentRecord.ContainsKey(fields[i]))
-                return currentRecord[fields[i]];
-            return null;
+            if (fields[i].IsAuditingColumn)//Ignore auditing columns
+                return null;
+            if (currentRecord.ContainsKey(fields[i].CanonicalName))
+                return currentRecord[fields[i].CanonicalName];
+            if (fields[i].IsNullable || !table.UseDefaults)
+                return null;
+            if (fields[i].DefaultValue != null)
+                return TrimBrackets(fields[i].DefaultValue);
+            throw new NoDefaultException { Field = fields[i].Name };
         }
 
         public int GetValues(object[] values)
@@ -189,7 +208,9 @@ namespace DbSync
 
         public bool IsDBNull(int i)
         {
-            return !currentRecord.ContainsKey(fields[i]);
+            if (fields[i].IsNullable)
+                return !currentRecord.ContainsKey(fields[i].CanonicalName);
+            return false;
         }
 
         public bool NextResult()
@@ -208,7 +229,7 @@ namespace DbSync
             
             for (int p = 0; p < xmlReader.AttributeCount; p++)
             {
-                if (!fields.Contains(xmlReader.Name.ToLowerInvariant()))
+                if (!fields.Any(f=>f.CanonicalName == xmlReader.Name.ToLowerInvariant()))
                     throw new XmlRecordDataReaderException { Field = xmlReader.Name };
                 currentRecord[xmlReader.Name.ToLowerInvariant()] = xmlReader.GetValueAsync().Result;
                 xmlReader.MoveToNextAttribute();
