@@ -51,6 +51,7 @@
     <Compile Include="DbSyncException.cs" />
     <Compile Include="DictionaryDataReader.cs" />
     <Compile Include="Services\IErrorHandler.cs" />
+    <Compile Include="Transfers\DIffGenerator.cs" />
     <Compile Include="Transfers\Exporter.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Transfers\GenerateImportScript.cs" />
