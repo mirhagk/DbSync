@@ -69,6 +69,7 @@ namespace DbSync.Core.Transfers
                         {
                             cmd.CommandText = $"SELECT {table.PrimaryKey}, {string.Join(", ", table.DataFields)} FROM {table.QualifiedName} WHERE IsEnvironmentSpecific = 0";
                         }
+                        cmd.CommandText += " ORDER BY " + table.PrimaryKey;
                         cmd.CommandType = CommandType.Text;
 
                         WriteQueryToXmlFile(cmd, Path.Combine(settings.Path, table.Name), settings);
@@ -76,7 +77,7 @@ namespace DbSync.Core.Transfers
                         if (table.IsEnvironmentSpecific)
                         {
                             //Switch IsEnvironmentSpecific = 0 to IsEnvironmentSpecific = 1
-                            cmd.CommandText = cmd.CommandText.Substring(0, cmd.CommandText.Length - 1) + "1";
+                            cmd.CommandText = cmd.CommandText.Replace("IsEnvironmentSpecific = 0", "IsEnvironmentSpecific = 1");
                             WriteQueryToXmlFile(cmd, Path.Combine(settings.Path, table.Name) + "." + environment, settings);
                         }
                     }
