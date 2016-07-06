@@ -12,7 +12,7 @@ namespace DbSync.Core
     {
         public enum Strategy
         {
-            MergeWithoutDelete, MergeWithDelete, AddOnly, Override
+            MergeWithoutDelete, MergeWithDelete, AddOnly, Override, DropReadd
         }
         private static string loadScript(string scriptName)
         {
@@ -35,6 +35,7 @@ namespace DbSync.Core
         static string insertWithAudit = loadScript(nameof(insertWithAudit));
         static string update = loadScript(nameof(update));
         static string updateWithAudit = loadScript(nameof(updateWithAudit));
+        static string dropReadd = loadScript(nameof(dropReadd));
         static string getUpdate(JobSettings settings) => settings.UseAuditColumnsOnImport.Value ? updateWithAudit : update;
         static string getInsert(JobSettings settings) => settings.UseAuditColumnsOnImport.Value ? insertWithAudit : insert;
         static string overwriteSql(JobSettings settings, string target, string source, string primaryKey, IEnumerable<string> restOfColumns)
