@@ -12,7 +12,7 @@ namespace DbSync.Core
     {
         public enum Strategy
         {
-            MergeWithoutDelete, MergeWithDelete, AddOnly, Override
+            MergeWithoutDelete, MergeWithDelete, AddOnly, Override, DropReadd
         }
         private static string loadScript(string scriptName)
         {
@@ -35,6 +35,7 @@ namespace DbSync.Core
         static string insertWithAudit = loadScript(nameof(insertWithAudit));
         static string update = loadScript(nameof(update));
         static string updateWithAudit = loadScript(nameof(updateWithAudit));
+        static string dropReadd = loadScript(nameof(dropReadd));
         static string getUpdate(JobSettings settings) => settings.UseAuditColumnsOnImport.Value ? updateWithAudit : update;
         static string getInsert(JobSettings settings) => settings.UseAuditColumnsOnImport.Value ? insertWithAudit : insert;
         static string overwriteSql(JobSettings settings, string target, string source, string primaryKey, IEnumerable<string> restOfColumns)
@@ -92,6 +93,9 @@ namespace DbSync.Core
                     break;
                 case Strategy.Override:
                     sqlToUse = getInsert(settings) + "\n" + overwriteSql(settings, target, source, primaryKey, restOfColumns);
+                    break;
+                case Strategy.DropReadd:
+                    sqlToUse = dropReadd;
                     break;
                 default:
                     throw new NotImplementedException("That merge strategy is not yet supported");

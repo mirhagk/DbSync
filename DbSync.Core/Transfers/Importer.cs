@@ -53,11 +53,17 @@ namespace DbSync.Core.Transfers
             using (var conn = new SqlConnection(settings.ConnectionString))
             {
                 conn.Open();
+                foreach(var table in settings.Tables)
+                    conn.Execute($"ALTER TABLE {table.QualifiedName} NOCHECK CONSTRAINT ALL");
+
                 foreach (var table in settings.Tables)
                 {
                     if (table.Initialize(conn, settings, errorHandler))
                         ImportTable(conn, table, settings, errorHandler);
                 }
+
+                foreach (var table in settings.Tables)
+                    conn.Execute($"ALTER TABLE {table.QualifiedName} CHECK CONSTRAINT ALL");
             }
         }
     }
