@@ -91,9 +91,10 @@ ORDER BY column_id
             }
             PrimaryKey = PrimaryKey.ToLowerInvariant();
 
-            data = data
-                .Where(f => f != PrimaryKey)
-                .Where(f => !settings.AuditColumns.AuditColumnNames().Select(a=>a.ToLowerInvariant()).Contains(f));
+            data = data.Where(f => f != PrimaryKey);
+
+            if (settings.UseAuditColumnsOnImport ?? false)
+                    data = data.Where(f => !settings.AuditColumns.AuditColumnNames().Select(a => a.ToLowerInvariant()).Contains(f));
 
             if (IsEnvironmentSpecific)
                 data = data.Where(f => f != "isenvironmentspecific");
