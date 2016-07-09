@@ -58,7 +58,7 @@ namespace DbSync.Core.Transfers
                 //record exists in both
                 if (comparison == 0)
                 {
-
+                    recordsToInsert.Add(sourceRecord);
                 }
                 //target contains a record not in source
                 else if (comparison == 1)
@@ -70,7 +70,12 @@ namespace DbSync.Core.Transfers
                 //source contains a record not in target
                 else if (comparison == -1)
                 {
-
+                    var identical = true;
+                    for (int i = 0; i < sourceRecord.Count; i++)
+                        if (sourceRecord[i] != targetRecord[i])
+                            identical = false;
+                    if (!identical)
+                        recordsToUpdate.Add(sourceRecord);
                 }
             }
         }
