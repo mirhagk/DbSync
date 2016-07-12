@@ -62,11 +62,12 @@ ORDER BY column_id
 ", new { table = BasicName, schema = SchemaName }));
 
             var auditColumns = settings.AuditColumns.AuditColumnNames().Select(c => c.ToLowerInvariant()).ToList();
-            foreach (var field in Fields)
-            {
-                if (auditColumns.Contains(field.CanonicalName))
-                    field.IsAuditingColumn = true;
-            }
+            if (settings.UseAuditColumnsOnImport ?? false)
+                foreach (var field in Fields)
+                {
+                    if (auditColumns.Contains(field.CanonicalName))
+                        field.IsAuditingColumn = true;
+                }
 
             if (!Fields.Any())
             {
