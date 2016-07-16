@@ -29,21 +29,8 @@ namespace DbSync
             fields = table.Fields;
             xmlReader = XmlReader.Create(path, new XmlReaderSettings { Async = true });
         }
-        public object this[string name]
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public object this[int i]
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public object this[string name] => this[fields.FindIndex(f => f.CanonicalName == name)];
+        public object this[int i] => GetValue(i);
 
         public int Depth
         {
