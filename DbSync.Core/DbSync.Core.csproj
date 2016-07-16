@@ -49,7 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DbSyncException.cs" />
-    <Compile Include="DictionaryDataReader.cs" />
+    <Compile Include="DataReaders\DictionaryDataReader.cs" />
     <Compile Include="IDataWriter.cs" />
     <Compile Include="Services\IErrorHandler.cs" />
     <Compile Include="Transfers\DIffGenerator.cs" />
@@ -64,8 +64,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Table.cs" />
     <Compile Include="Transfers\ImportTransfer.cs" />
+    <Compile Include="Transfers\SmartTransfer.cs" />
     <Compile Include="Transfers\Transfer.cs" />
-    <Compile Include="XmlRecordDataReader.cs" />
+    <Compile Include="DataReaders\XmlRecordDataReader.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="DbSync.Core.nuspec" />
@@ -78,6 +79,7 @@
     <EmbeddedResource Include="Scripts\Update.sql" />
     <EmbeddedResource Include="Scripts\UpdateWithAudit.sql" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
