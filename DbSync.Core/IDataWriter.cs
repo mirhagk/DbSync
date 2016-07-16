@@ -30,6 +30,8 @@ namespace DbSync.Core
         }
         string Escape(object value)
         {
+            if (value == null)
+                return "NULL";
             return $"'{value}'";
         }
         public void Add(Dictionary<string, object> entry)
