@@ -34,7 +34,14 @@ namespace DbSync.Core.Transfers
                 return comparison.Value;
             return null;
         }
-        public void GenerateDifference(IDataReader source, IDataReader target, Table table)
+        Dictionary<string, object> SerializeRecordAsDictionary(List<object> record, Table table)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            for (int i = 0; i < record.Count; i++)
+                result.Add(table.Fields[i].CanonicalName, record[i]);
+            return result;
+        }
+        public void GenerateDifference(IDataReader source, IDataReader target, Table table, IDataWriter dataWriter)
         {
             source.Read();
             target.Read();
@@ -50,32 +57,55 @@ namespace DbSync.Core.Transfers
 
             while (true)
             {
-                var comparison = CompareKeys(source[table.PrimaryKey], target[table.PrimaryKey]);
+                int? comparison;
+                if (source == null && target == null)
+                    break;
+                else if (source == null)
+                    comparison = 1;
+                else if (target == null)
+                    comparison = -1;
+                else
+                    comparison = CompareKeys(source[table.PrimaryKey], target[table.PrimaryKey]);
+
                 if (comparison == null)
                 {
                     throw new NotSupportedKeyException($"Could not compare key {table.PrimaryKey} of {table.Name}. DbSync does not support comparison of keys of it's type");
                 }
+                bool consumeTarget = false;
+                bool consumeSource = false;
                 //record exists in both
                 if (comparison == 0)
-                {
-                    recordsToInsert.Add(sourceRecord);
-                }
-                //target contains a record not in source
-                else if (comparison == 1)
-                {
-                    targetsToDelete.Add(target[table.PrimaryKey]);
-                    target.Read();
-                    targetRecord = ReadRecord(target);
-                }
-                //source contains a record not in target
-                else if (comparison == -1)
                 {
                     var identical = true;
                     for (int i = 0; i < sourceRecord.Count; i++)
                         if (sourceRecord[i] != targetRecord[i])
                             identical = false;
                     if (!identical)
-                        recordsToUpdate.Add(sourceRecord);
+                        dataWriter.Update(SerializeRecordAsDictionary(sourceRecord, table));
+                    consumeSource = true;
+                    consumeTarget = true;
+                }
+                //target contains a record not in source
+                else if (comparison == 1)
+                {
+                    dataWriter.Delete(target[table.PrimaryKey]);
+                    consumeTarget = true;
+                }
+                //source contains a record not in target
+                else if (comparison == -1)
+                {
+                    dataWriter.Add(SerializeRecordAsDictionary(sourceRecord, table));
+                    consumeSource = true;
+                }
+                if (consumeSource)
+                {
+                    source.Read();
+                    sourceRecord = ReadRecord(source); 
+                }
+                if (consumeTarget)
+                {
+                    target.Read();
+                    targetRecord = ReadRecord(target);
                 }
             }
         }
