@@ -61,11 +61,11 @@ namespace DbSync.Core.Transfers
             while (true)
             {
                 int? comparison;
-                if (source == null && target == null)
+                if (sourceRecord == null && targetRecord == null)
                     break;
-                else if (source == null)
+                else if (sourceRecord == null)
                     comparison = 1;
-                else if (target == null)
+                else if (targetRecord == null)
                     comparison = -1;
                 else
                     comparison = CompareObjects(source[table.PrimaryKey], target[table.PrimaryKey]);
