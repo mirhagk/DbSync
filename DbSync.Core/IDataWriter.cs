@@ -12,6 +12,7 @@ namespace DbSync.Core
         void Connect(Table table);
         void Add(Dictionary<string,object> entry);
         void Update(Dictionary<string, object> entry);
+        void Delete(object key);
     }
     class SqlSimpleDataWriter : IDataWriter, IDisposable
     {
@@ -37,11 +38,15 @@ namespace DbSync.Core
         }
         public void Add(Dictionary<string, object> entry)
         {
-            RunSql($"INSERT INTO {table.QualifiedName} ({string.Join(",", table.Fields)}) VALUES ({string.Join(",", table.Fields.Select(f => Escape(entry[f.CanonicalName])))})";
+            RunSql($"INSERT INTO {table.QualifiedName} ({string.Join(",", table.Fields)}) VALUES ({string.Join(",", table.Fields.Select(f => Escape(entry[f.CanonicalName])))})");
             throw new NotImplementedException();
         }
 
         public void Update(Dictionary<string, object> entry)
+        {
+            //todo: implement
+        }
+        public void Delete(object key)
         {
             //todo: implement
         }
