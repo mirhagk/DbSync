@@ -18,13 +18,10 @@ namespace DbSync.Core
     {
         Table table;
         SqlConnection connection;
-        public SqlSimpleDataWriter(string connectionString)
+        public SqlSimpleDataWriter(string connectionString, Table table)
         {
             connection = new SqlConnection(connectionString);
             connection.Open();
-        }
-        public void Connect(Table table)
-        {
             this.table = table;
         }
         void RunSql(string sql)
