@@ -50,6 +50,7 @@
   <ItemGroup>
     <Compile Include="DbSyncException.cs" />
     <Compile Include="DictionaryDataReader.cs" />
+    <Compile Include="IDataWriter.cs" />
     <Compile Include="Services\IErrorHandler.cs" />
     <Compile Include="Transfers\DIffGenerator.cs" />
     <Compile Include="Transfers\Exporter.cs" />
