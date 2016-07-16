@@ -8,7 +8,7 @@ using System.Data.SqlClient;
 
 namespace DbSync.Core.Transfers
 {
-    class SmartTransfer : Transfer
+    public class SmartTransfer : Transfer
     {
         public static SmartTransfer Instance { get; } = new SmartTransfer();
         private SmartTransfer() { }

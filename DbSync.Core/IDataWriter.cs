@@ -9,7 +9,6 @@ namespace DbSync.Core
 {
     interface IDataWriter
     {
-        void Connect(Table table);
         void Add(Dictionary<string,object> entry);
         void Update(Dictionary<string, object> entry);
         void Delete(object key);
