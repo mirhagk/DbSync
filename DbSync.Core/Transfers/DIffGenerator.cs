@@ -103,13 +103,17 @@ namespace DbSync.Core.Transfers
                 }
                 if (consumeSource)
                 {
-                    source.Read();
-                    sourceRecord = ReadRecord(source); 
+                    if (source.Read())
+                        sourceRecord = ReadRecord(source);
+                    else
+                        sourceRecord = null;
                 }
                 if (consumeTarget)
                 {
-                    target.Read();
-                    targetRecord = ReadRecord(target);
+                    if (target.Read())
+                        targetRecord = ReadRecord(target);
+                    else
+                        targetRecord = null;
                 }
             }
         }
