@@ -27,7 +27,7 @@ namespace DbSync.Core.Transfers
                 result.Add(reader.GetValue(i));
             return result;
         }
-        public int? CompareKeys(object key1, object key2)
+        public int? CompareObjects(object key1, object key2)
         {
             int? comparison = null;
             {
@@ -71,7 +71,7 @@ namespace DbSync.Core.Transfers
                 else if (target == null)
                     comparison = -1;
                 else
-                    comparison = CompareKeys(source[table.PrimaryKey], target[table.PrimaryKey]);
+                    comparison = CompareObjects(source[table.PrimaryKey], target[table.PrimaryKey]);
 
                 if (comparison == null)
                 {
@@ -84,7 +84,7 @@ namespace DbSync.Core.Transfers
                 {
                     var identical = true;
                     for (int i = 0; i < sourceRecord.Count; i++)
-                        if (sourceRecord[i] != targetRecord[i])
+                        if (CompareObjects(sourceRecord[i], targetRecord[i]) != 0)
                             identical = false;
                     if (!identical)
                         dataWriter.Update(SerializeRecordAsDictionary(sourceRecord, table));
