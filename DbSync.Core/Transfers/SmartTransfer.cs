@@ -10,6 +10,8 @@ namespace DbSync.Core.Transfers
 {
     class SmartTransfer : Transfer
     {
+        public static SmartTransfer Instance { get; } = new SmartTransfer();
+        private SmartTransfer() { }
         public override void Run(JobSettings settings, string environment, IErrorHandler errorHandler)
         {
             using (var connection = new SqlConnection(settings.ConnectionString))
