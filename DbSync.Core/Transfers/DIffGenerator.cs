@@ -29,7 +29,13 @@ namespace DbSync.Core.Transfers
         }
         public int? CompareKeys(object key1, object key2)
         {
-            var comparison = (key1 as int?)?.CompareTo(key2);
+            int? comparison = null;
+            {
+                long key1Data;
+                long key2Data;
+                if (long.TryParse(key1.ToString(), out key1Data) && long.TryParse(key2.ToString(), out key2Data))
+                    comparison = key1Data.CompareTo(key2Data);
+            }
             if (comparison != null)
                 return comparison.Value;
             return null;
