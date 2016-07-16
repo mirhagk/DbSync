@@ -59,7 +59,7 @@ namespace DbSync
 
             try
             {
-                var errorHandler = new DbSync.Core.Services.DefaultErrorHandler();
+                var errorHandler = new Core.Services.DefaultErrorHandler();
                 job.CurrentEnvironment = cmdArgs.Environment;
                 if (cmdArgs.Export)
                     Exporter.Instance.Run(job, cmdArgs.Environment, errorHandler);
