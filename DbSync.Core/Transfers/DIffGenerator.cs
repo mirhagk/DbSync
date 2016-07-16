@@ -29,16 +29,13 @@ namespace DbSync.Core.Transfers
         }
         public int? CompareObjects(object key1, object key2)
         {
-            int? comparison = null;
             {
                 long key1Data;
                 long key2Data;
-                if (long.TryParse(key1.ToString(), out key1Data) && long.TryParse(key2.ToString(), out key2Data))
-                    comparison = key1Data.CompareTo(key2Data);
+                if (long.TryParse(key1?.ToString(), out key1Data) && long.TryParse(key2?.ToString(), out key2Data))
+                    return key1Data.CompareTo(key2Data);
             }
-            if (comparison != null)
-                return comparison.Value;
-            return null;
+            return key1?.ToString()?.CompareTo(key2?.ToString());
         }
         Dictionary<string, object> SerializeRecordAsDictionary(List<object> record, Table table)
         {
