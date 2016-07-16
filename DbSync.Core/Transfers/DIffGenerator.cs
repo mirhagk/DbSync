@@ -8,7 +8,7 @@ using System.Data;
 
 namespace DbSync.Core.Transfers
 {
-    class DiffGenerator : Transfer
+    class DiffGenerator
     {
         public class MismatchedSchemaException:DbSyncException
         {
@@ -108,11 +108,6 @@ namespace DbSync.Core.Transfers
                     targetRecord = ReadRecord(target);
                 }
             }
-        }
-
-        public override void Run(JobSettings settings, string environment, IErrorHandler errorHandler)
-        {
-            throw new NotImplementedException();
         }
     }
 }
