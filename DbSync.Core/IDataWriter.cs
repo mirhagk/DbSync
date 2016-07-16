@@ -42,8 +42,8 @@ namespace DbSync.Core
                 hasAdded = true;
                 RunSql($"IF OBJECTPROPERTY(OBJECT_ID('{table.QualifiedName}'), 'TableHasIdentity') = 1 SET IDENTITY_INSERT {table.QualifiedName} ON");
             }
-            RunSql($"INSERT INTO {table.QualifiedName} ({string.Join(",", table.Fields.Select(f=>f.Name))}) VALUES ({string.Join(",", table.Fields.Select(f => Escape(entry[f.CanonicalName])))})");
-            throw new NotImplementedException();
+            var nonAuditFields = table.Fields.Where(f => !f.IsAuditingColumn);
+            RunSql($"INSERT INTO {table.QualifiedName} ({string.Join(",", nonAuditFields.Select(f=>f.Name))}) VALUES ({string.Join(",", nonAuditFields.Select(f => Escape(entry[f.CanonicalName])))})");
         }
 
         public void Update(Dictionary<string, object> entry)
