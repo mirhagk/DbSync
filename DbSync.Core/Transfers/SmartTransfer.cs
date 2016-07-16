@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DbSync.Core.Services;
+using System.Data.SqlClient;
 
 namespace DbSync.Core.Transfers
 {
@@ -11,10 +12,22 @@ namespace DbSync.Core.Transfers
     {
         public override void Run(JobSettings settings, string environment, IErrorHandler errorHandler)
         {
-            var target = new IDataReader
-            foreach(var table in settings.Tables)
+            using (var connection = new SqlConnection(settings.ConnectionString))
             {
+                connection.Open();
 
+                foreach (var table in settings.Tables)
+                    using (var cmd = connection.CreateCommand())
+                    {
+                        cmd.CommandText = $"SELECT * FROM {table.QualifiedName}";
+                        var diffGenerator = new DiffGenerator();
+                        using (var target = cmd.ExecuteReader())
+                        using (var source = new XmlRecordDataReader(settings.Path, table))
+                        using (var writer = new SqlSimpleDataWriter(settings.ConnectionString, table))
+                        {
+                            diffGenerator.GenerateDifference(source, target, table, writer);
+                        }
+                    }
             }
         }
     }
