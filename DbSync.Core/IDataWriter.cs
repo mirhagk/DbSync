@@ -17,6 +17,7 @@ namespace DbSync.Core
     {
         Table table;
         SqlConnection connection;
+        bool hasAdded = false;
         public SqlSimpleDataWriter(string connectionString, Table table)
         {
             connection = new SqlConnection(connectionString);
@@ -36,6 +37,11 @@ namespace DbSync.Core
         }
         public void Add(Dictionary<string, object> entry)
         {
+            if (!hasAdded)
+            {
+                hasAdded = true;
+                RunSql($"IF OBJECTPROPERTY(OBJECT_ID('{table.QualifiedName}'), 'TableHasIdentity') = 1 SET IDENTITY_INSERT {table.QualifiedName} ON");
+            }
             RunSql($"INSERT INTO {table.QualifiedName} ({string.Join(",", table.Fields.Select(f=>f.Name))}) VALUES ({string.Join(",", table.Fields.Select(f => Escape(entry[f.CanonicalName])))})");
             throw new NotImplementedException();
         }
@@ -50,6 +56,10 @@ namespace DbSync.Core
         }
         public void Dispose()
         {
+            if (hasAdded)
+            {
+                RunSql($"IF OBJECTPROPERTY(OBJECT_ID('{table.QualifiedName}'), 'TableHasIdentity') = 1 SET IDENTITY_INSERT {table.QualifiedName} OFF");
+            }
             connection.Close();
             connection.Dispose();
         }
