@@ -44,11 +44,11 @@ namespace DbSync.Core
 
         public void Update(Dictionary<string, object> entry)
         {
-            //todo: implement
+            RunSql($"UPDATE {table.QualifiedName} SET {string.Join(", ", table.Fields.Where(f => !f.IsPrimaryKey).Select(f => $"{f.Name} = {entry[f.CanonicalName]}"))}");
         }
         public void Delete(object key)
         {
-            //todo: implement
+            RunSql($"DELETE FROM {table.QualifiedName} WHERE {table.PrimaryKey} = {Escape(key)}");
         }
         public void Dispose()
         {
