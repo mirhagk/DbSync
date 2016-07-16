@@ -81,8 +81,9 @@ namespace DbSync.Core.Transfers
                 {
                     var identical = true;
                     for (int i = 0; i < sourceRecord.Count; i++)
-                        if (CompareObjects(sourceRecord[i], targetRecord[i]) != 0)
-                            identical = false;
+                        if (!table.Fields[i].IsAuditingColumn)
+                            if (CompareObjects(sourceRecord[i], targetRecord[i]) != 0)
+                                identical = false;
                     if (!identical)
                         dataWriter.Update(SerializeRecordAsDictionary(sourceRecord, table));
                     consumeSource = true;
