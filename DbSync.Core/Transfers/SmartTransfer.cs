@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DbSync.Core.Services;
 using System.Data.SqlClient;
+using System.IO;
 
 namespace DbSync.Core.Transfers
 {
@@ -21,10 +22,11 @@ namespace DbSync.Core.Transfers
                 foreach (var table in settings.Tables)
                     using (var cmd = connection.CreateCommand())
                     {
+                        table.Initialize(connection, settings, errorHandler);
                         cmd.CommandText = $"SELECT * FROM {table.QualifiedName}";
                         var diffGenerator = new DiffGenerator();
                         using (var target = cmd.ExecuteReader())
-                        using (var source = new XmlRecordDataReader(settings.Path, table))
+                        using (var source = new XmlRecordDataReader(Path.Combine(settings.Path, table.Name), table))
                         using (var writer = new SqlSimpleDataWriter(settings.ConnectionString, table))
                         {
                             diffGenerator.GenerateDifference(source, target, table, writer);
