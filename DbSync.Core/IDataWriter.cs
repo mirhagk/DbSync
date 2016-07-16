@@ -40,7 +40,7 @@ namespace DbSync.Core
 
         public void Update(Dictionary<string, object> entry)
         {
-            RunSql($"UPDATE {table.QualifiedName} SET {string.Join(", ", table.Fields.Where(f => !f.IsPrimaryKey).Select(f => $"{f.Name} = {entry[f.CanonicalName]}"))}");
+            RunSql($"UPDATE {table.QualifiedName} SET {string.Join(", ", table.Fields.Where(f => !f.IsPrimaryKey).Select(f => $"{f.Name} = {Escape(entry[f.CanonicalName])}"))} WHERE {table.PrimaryKey} = {Escape(entry[table.PrimaryKey])}");
         }
         public void Delete(object key)
         {
