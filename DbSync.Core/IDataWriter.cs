@@ -18,11 +18,13 @@ namespace DbSync.Core
         Table table;
         SqlConnection connection;
         bool hasAdded = false;
-        public SqlSimpleDataWriter(string connectionString, Table table)
+        JobSettings settings;
+        public SqlSimpleDataWriter(string connectionString, Table table, JobSettings settings)
         {
             connection = new SqlConnection(connectionString);
             connection.Open();
             this.table = table;
+            this.settings = settings;
         }
         void RunSql(string sql)
         {
@@ -43,7 +45,16 @@ namespace DbSync.Core
                 RunSql($"IF OBJECTPROPERTY(OBJECT_ID('{table.QualifiedName}'), 'TableHasIdentity') = 1 SET IDENTITY_INSERT {table.QualifiedName} ON");
             }
             var nonAuditFields = table.Fields.Where(f => !f.IsAuditingColumn);
-            RunSql($"INSERT INTO {table.QualifiedName} ({string.Join(",", nonAuditFields.Select(f=>f.Name))}) VALUES ({string.Join(",", nonAuditFields.Select(f => Escape(entry[f.CanonicalName])))})");
+            var fieldNames = string.Join(",", nonAuditFields.Select(f => f.Name));
+            var fieldValues = string.Join(",", nonAuditFields.Select(f => Escape(entry[f.CanonicalName])));
+            if (settings.UseAuditColumnsOnImport ?? false)
+            {
+                var c = settings.AuditColumns;
+                fieldNames += $", {c.CreatedDate}, {c.CreatedUser}, {c.ModifiedDate}, {c.ModifiedUser}";
+                fieldValues += $", GETDATE(), SUSER_NAME(), GETDATE(), SUSER_NAME()";
+            }
+
+            RunSql($"INSERT INTO {table.QualifiedName} ({fieldNames}) VALUES ({fieldValues})");
         }
 
         public void Update(Dictionary<string, object> entry)
