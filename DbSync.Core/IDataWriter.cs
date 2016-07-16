@@ -36,7 +36,7 @@ namespace DbSync.Core
         }
         public void Add(Dictionary<string, object> entry)
         {
-            RunSql($"INSERT INTO {table.QualifiedName} ({string.Join(",", table.Fields)}) VALUES ({string.Join(",", table.Fields.Select(f => Escape(entry[f.CanonicalName])))})");
+            RunSql($"INSERT INTO {table.QualifiedName} ({string.Join(",", table.Fields.Select(f=>f.Name))}) VALUES ({string.Join(",", table.Fields.Select(f => Escape(entry[f.CanonicalName])))})");
             throw new NotImplementedException();
         }
 
