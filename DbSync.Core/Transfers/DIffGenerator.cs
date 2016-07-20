@@ -70,6 +70,8 @@ namespace DbSync.Core.Transfers
                 else
                     comparison = CompareObjects(source[table.PrimaryKey], target[table.PrimaryKey]);
 
+                dataWriter.Entry(SerializeRecordAsDictionary(sourceRecord, table));
+
                 if (comparison == null)
                 {
                     throw new NotSupportedKeyException($"Could not compare key {table.PrimaryKey} of {table.Name}. DbSync does not support comparison of keys of it's type");

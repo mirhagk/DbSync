@@ -7,13 +7,14 @@ using System.Threading.Tasks;
 
 namespace DbSync.Core
 {
-    interface IDataWriter
+    interface IDataWriter: IDisposable
     {
         void Add(Dictionary<string,object> entry);
         void Update(Dictionary<string, object> entry);
         void Delete(object key);
+        void Entry(Dictionary<string, object> entry);
     }
-    class SqlSimpleDataWriter : IDataWriter, IDisposable
+    class SqlSimpleDataWriter : IDataWriter
     {
         Table table;
         SqlConnection connection;
@@ -37,6 +38,7 @@ namespace DbSync.Core
                 return "NULL";
             return $"'{value}'";
         }
+        public void Entry(Dictionary<string, object> entry) { }
         public void Add(Dictionary<string, object> entry)
         {
             if (!hasAdded)

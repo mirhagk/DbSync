@@ -48,9 +48,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataWriter\XmlDataWriter.cs" />
     <Compile Include="DbSyncException.cs" />
     <Compile Include="DataReaders\DictionaryDataReader.cs" />
-    <Compile Include="IDataWriter.cs" />
+    <Compile Include="DataWriter\IDataWriter.cs" />
     <Compile Include="Services\IErrorHandler.cs" />
     <Compile Include="Transfers\DIffGenerator.cs" />
     <Compile Include="Transfers\Exporter.cs" />

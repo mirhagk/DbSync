@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using DbSync.Core.Services;
 using System.Data.SqlClient;
 using System.IO;
+using DbSync.Core.DataWriter;
 
 namespace DbSync.Core.Transfers
 {
@@ -14,6 +15,10 @@ namespace DbSync.Core.Transfers
         public static SmartTransfer Instance { get; } = new SmartTransfer();
         private SmartTransfer() { }
         public override void Run(JobSettings settings, string environment, IErrorHandler errorHandler)
+        {
+            Run(settings, errorHandler, false);
+        }
+        public void Run(JobSettings settings, IErrorHandler errorHandler, bool export)
         {
             using (var connection = new SqlConnection(settings.ConnectionString))
             {
@@ -26,8 +31,8 @@ namespace DbSync.Core.Transfers
                         cmd.CommandText = $"SELECT * FROM {table.QualifiedName}";
                         var diffGenerator = new DiffGenerator();
                         using (var target = cmd.ExecuteReader())
-                        using (var source = new XmlRecordDataReader(Path.Combine(settings.Path, table.Name + ".xml"), table))
-                        using (var writer = new SqlSimpleDataWriter(settings.ConnectionString, table, settings))
+                        using (var source = new XmlRecordDataReader(Path.Combine(settings.Path, table.Name+".xml"), table))
+                        using (var writer = export ? new XmlDataWriter(table, settings) as IDataWriter : new SqlSimpleDataWriter(settings.ConnectionString, table, settings))
                         {
                             diffGenerator.GenerateDifference(source, target, table, writer);
                         }
