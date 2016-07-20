@@ -21,6 +21,8 @@ namespace DbSync.Core.Transfers
 
         public List<object> ReadRecord(IDataReader reader)
         {
+            if (!reader.Read())
+                return null;
             var size = reader.FieldCount;
             List<object> result = new List<object>(size);
             for (int i = 0; i < size; i++)
@@ -46,8 +48,6 @@ namespace DbSync.Core.Transfers
         }
         public void GenerateDifference(IDataReader source, IDataReader target, Table table, IDataWriter dataWriter)
         {
-            source.Read();
-            target.Read();
             if (source.FieldCount != target.FieldCount)
             {
                 throw new MismatchedSchemaException($"Schema difference detected while importing {table.BasicName}. Please ensure the schemas match before syncing");
@@ -102,19 +102,9 @@ namespace DbSync.Core.Transfers
                     consumeSource = true;
                 }
                 if (consumeSource)
-                {
-                    if (source.Read())
-                        sourceRecord = ReadRecord(source);
-                    else
-                        sourceRecord = null;
-                }
+                    sourceRecord = ReadRecord(source);
                 if (consumeTarget)
-                {
-                    if (target.Read())
-                        targetRecord = ReadRecord(target);
-                    else
-                        targetRecord = null;
-                }
+                    targetRecord = ReadRecord(target);
             }
         }
     }
