@@ -33,8 +33,13 @@ namespace DbSync.Tests.Helpers
         List<T> LoadedData { get; set; }
         List<T> InitialData { get; set; }
         PetaPoco.Database Db { get; set; }
+        TempFolder Folder { get; set; }
+        string Name => typeof(T).Name;
+        string FQN => "dbo." + Name;
+        string FileName => FQN + ".xml";
         public void Create()
         {
+            Folder = new TempFolder();
             Db = new PetaPoco.Database(@"Data Source =.;Database=tempdb;Integrated Security=True", "SqlServer");
             var columns = new List<string>();
             foreach(var property in typeof(T).GetProperties())
@@ -60,6 +65,21 @@ namespace DbSync.Tests.Helpers
         public void Load(List<T> data)
         {
             LoadedData = data;
+            XmlSerializer serializer = new XmlSerializer(typeof(List<T>));
+            using (var stream = new System.IO.StreamWriter(System.IO.Path.Combine(Folder.Path, FileName)))
+                serializer.Serialize(stream, data);
+
+
+            var errorHandler = new Core.Services.DefaultErrorHandler();
+            var transfer = DbSync.Core.Transfers.SmartTransfer.Instance;
+
+            transfer.Run(new Core.JobSettings()
+            {
+                Tables = new List<Core.Table>
+                {
+                    new Core.Table {Name = FQN }
+                }
+            }, null, errorHandler);
         }
         public void RoundTripCheck()
         {
