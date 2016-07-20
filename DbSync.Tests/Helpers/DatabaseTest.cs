@@ -39,6 +39,18 @@ namespace DbSync.Tests.Helpers
         string FQN => "dbo." + Name;
         string FileName => FQN + ".xml";
         string ConnectionString { get; } = @"Data Source =.;Database=tempdb;Integrated Security=True";
+        Core.JobSettings Settings => new Core.JobSettings()
+        {
+            Tables = new List<Core.Table>
+                {
+                    new Core.Table {Name = FQN }
+                },
+            ConnectionString = ConnectionString,
+            AuditColumns = new Core.JobSettings.AuditSettings(),
+            IgnoreAuditColumnsOnExport = true,
+            UseAuditColumnsOnImport = false,
+            Path = Folder.Path
+        };
         public void Create()
         {
             Folder = new TempFolder();
@@ -94,18 +106,7 @@ namespace DbSync.Tests.Helpers
             var errorHandler = new Core.Services.DefaultErrorHandler();
             var transfer = DbSync.Core.Transfers.SmartTransfer.Instance;
 
-            transfer.Run(new Core.JobSettings()
-            {
-                Tables = new List<Core.Table>
-                {
-                    new Core.Table {Name = FQN }
-                },
-                ConnectionString = ConnectionString,
-                AuditColumns = new Core.JobSettings.AuditSettings(),
-                IgnoreAuditColumnsOnExport = true,
-                UseAuditColumnsOnImport = false,
-                Path = Folder.Path
-            }, null, errorHandler);
+            transfer.Run(Settings, null, errorHandler);
         }
         public void RoundTripCheck()
         {
