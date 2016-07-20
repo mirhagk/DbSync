@@ -14,7 +14,7 @@ namespace DbSync.Tests.Helpers
         public string Path { get; }
         public TempFolder()
         {
-            Path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "dbsync_test", Guid.NewGuid().ToString());
+            Path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "dbsync_test");
             System.IO.Directory.CreateDirectory(Path);
         }
     }
@@ -100,7 +100,10 @@ namespace DbSync.Tests.Helpers
                 {
                     new Core.Table {Name = FQN }
                 },
-                ConnectionString = ConnectionString
+                ConnectionString = ConnectionString,
+                AuditColumns = new Core.JobSettings.AuditSettings(),
+                IgnoreAuditColumnsOnExport = true,
+                UseAuditColumnsOnImport = false,
             }, null, errorHandler);
         }
         public void RoundTripCheck()
