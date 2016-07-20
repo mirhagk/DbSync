@@ -28,25 +28,31 @@ namespace DbSync.Tests.Helpers
         }
     }
 
-    public class DatabaseTest
+    public class DatabaseTest<T>
     {
-        public void Create(string sql)
+        List<T> LoadedData { get; set; }
+        List<T> InitialData { get; set; }
+        public void Create()
         {
 
         }
-        public void Initialize(string xml)
+        public void Initialize()
         {
-
+            Initialize(new List<T>());
         }
-        public void Load(string xml)
+        public void Initialize(List<T> data)
         {
-
+            InitialData = data;
+        }
+        public void Load(List<T> data)
+        {
+            LoadedData = data;
         }
         public void RoundTripCheck()
         {
-
+            Check(LoadedData);
         }
-        public void Check<T>(List<T> data)
+        public void Check(List<T> data)
         {
             var serializer = new XmlSerializer(typeof(List<T>));
             var tempFolder = new TempFolder();

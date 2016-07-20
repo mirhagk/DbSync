@@ -8,7 +8,7 @@ namespace DbSync.Tests
     [TestClass]
     public class MergeTests
     {
-        class Values
+        public class Values
         {
             public int ID { get; set; }
             public string value { get; set; }
@@ -16,11 +16,12 @@ namespace DbSync.Tests
         [TestMethod]
         public void TestSimpleImport()
         {
-            var test = new DatabaseTest();
-            test.Create(@"CREATE TABLE Values(ID int NOT NULL IDENTITY(1,1), value NVARCHAR(50) NOT NULL)");
+            var test = new DatabaseTest<Values>();
+            test.Create();
 
-            test.Initialize("<root></root>");
-            test.Load("<root><row ID='1' value='2'></root>");
+            test.Initialize();
+            test.Load(new System.Collections.Generic.List<Values> { new Values { ID = 1, value = "test" }, new Values { ID = 2, value = "test2" } });
+            test.RoundTripCheck();
         }
         [TestMethod]
         public void DoesGetSqlForMergeStrategyRun()
