@@ -8,7 +8,7 @@ namespace DbSync.Tests
     [TestClass]
     public class MergeTests
     {
-        public class Values
+        public struct Values
         {
             public int ID { get; set; }
             public string value { get; set; }

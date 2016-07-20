@@ -28,13 +28,25 @@ namespace DbSync.Tests.Helpers
         }
     }
 
-    public class DatabaseTest<T>
+    public class DatabaseTest<T>:IDisposable
     {
         List<T> LoadedData { get; set; }
         List<T> InitialData { get; set; }
         public void Create()
         {
-
+            var db = new PetaPoco.Database(@"Data Source =.; Database = tempdb; Integrated Security = True", null as string);
+            var columns = new List<string>();
+            foreach(var property in typeof(T).GetProperties(System.Reflection.BindingFlags.Public))
+            {
+                var dbType = "";
+                var type = property.PropertyType;
+                if (type == typeof(int))
+                    dbType = "INT NOT NULL";
+                else if (type == typeof(string))
+                    dbType = "NVARCHAR(MAX) NULL";
+                columns.Add($"{property.Name} {dbType}");
+            }
+            db.Execute($"CREATE TABLE {typeof(T).Name}({string.Join(", ", columns)})");
         }
         public void Initialize()
         {
@@ -66,6 +78,10 @@ namespace DbSync.Tests.Helpers
                     Assert.AreEqual(data[i], list[i]);
                 }
             }
+        }
+        public void Dispose()
+        {
+
         }
     }
 }
