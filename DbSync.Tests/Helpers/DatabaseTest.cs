@@ -104,6 +104,7 @@ namespace DbSync.Tests.Helpers
                 AuditColumns = new Core.JobSettings.AuditSettings(),
                 IgnoreAuditColumnsOnExport = true,
                 UseAuditColumnsOnImport = false,
+                Path = Folder.Path
             }, null, errorHandler);
         }
         public void RoundTripCheck()
