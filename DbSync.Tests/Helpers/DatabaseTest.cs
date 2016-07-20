@@ -113,15 +113,22 @@ namespace DbSync.Tests.Helpers
         {
             Check(LoadedData);
         }
+        [Serializable()]
+        [XmlRoot("root")]
+        public class XmlFileSchema
+        {
+            [XmlElement("row")]
+            public List<T> root { get; set; }
+        }
         public void Check(List<T> data)
         {
             Exporter.Instance.Run(Settings, null, new Core.Services.DefaultErrorHandler());
 
-            var serializer = new XmlSerializer(typeof(List<T>));
+            var serializer = new XmlSerializer(typeof(XmlFileSchema));
 
             using (var stream = new System.IO.StreamReader(System.IO.Path.Combine(Folder.Path, FileName)))
             {
-                var list = serializer.Deserialize(stream) as List<T>;
+                var list = (serializer.Deserialize(stream) as XmlFileSchema).root;
                 Assert.AreEqual(data.Count, list.Count);
                 for (int i = 0; i < data.Count; i++)
                 {

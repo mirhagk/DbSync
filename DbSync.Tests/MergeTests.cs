@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using DbSync.Core;
 using DbSync.Tests.Helpers;
+using System.Xml.Serialization;
 
 namespace DbSync.Tests
 {
@@ -10,7 +11,9 @@ namespace DbSync.Tests
     {
         public struct Values
         {
+            [XmlAttribute]
             public int ID { get; set; }
+            [XmlAttribute]
             public string value { get; set; }
         }
         [TestMethod]
