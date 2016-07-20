@@ -26,7 +26,7 @@ namespace DbSync.Core.Transfers
                         cmd.CommandText = $"SELECT * FROM {table.QualifiedName}";
                         var diffGenerator = new DiffGenerator();
                         using (var target = cmd.ExecuteReader())
-                        using (var source = new XmlRecordDataReader(Path.Combine(settings.Path, table.Name), table))
+                        using (var source = new XmlRecordDataReader(Path.Combine(settings.Path, table.Name + ".xml"), table))
                         using (var writer = new SqlSimpleDataWriter(settings.ConnectionString, table, settings))
                         {
                             diffGenerator.GenerateDifference(source, target, table, writer);
