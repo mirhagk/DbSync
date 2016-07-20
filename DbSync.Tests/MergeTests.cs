@@ -12,9 +12,20 @@ namespace DbSync.Tests
         public struct Values
         {
             [XmlAttribute]
-            public int ID { get; set; }
+            public int id { get; set; }
             [XmlAttribute]
             public string value { get; set; }
+            public override bool Equals(object obj)
+            {
+                if (!(obj is Values))
+                    return false;
+                var other = (Values)obj;
+                return other.id == id && other.value == value;
+            }
+            public override int GetHashCode()
+            {
+                return id.GetHashCode() ^ value.GetHashCode();
+            }
         }
         [TestMethod]
         public void TestSimpleImport()
@@ -24,7 +35,7 @@ namespace DbSync.Tests
                 test.Create();
 
                 test.Initialize();
-                test.Load(new System.Collections.Generic.List<Values> { new Values { ID = 1, value = "test" }, new Values { ID = 2, value = "test2" } });
+                test.Load(new System.Collections.Generic.List<Values> { new Values { id = 1, value = "test" }, new Values { id = 2, value = "test2" } });
                 test.RoundTripCheck();
             }
         }
