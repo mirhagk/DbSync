@@ -233,7 +233,7 @@ namespace DbSync
             {
                 if (disposing)
                 {
-                    // TODO: dispose managed state (managed objects).          
+                    xmlReader.Dispose();     
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
