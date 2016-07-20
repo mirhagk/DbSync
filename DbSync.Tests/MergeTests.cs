@@ -1,12 +1,27 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using DbSync.Core;
+using DbSync.Tests.Helpers;
 
 namespace DbSync.Tests
 {
     [TestClass]
     public class MergeTests
     {
+        class Values
+        {
+            public int ID { get; set; }
+            public string value { get; set; }
+        }
+        [TestMethod]
+        public void TestSimpleImport()
+        {
+            var test = new DatabaseTest();
+            test.Create(@"CREATE TABLE Values(ID int NOT NULL IDENTITY(1,1), value NVARCHAR(50) NOT NULL)");
+
+            test.Initialize("<root></root>");
+            test.Load("<root><row ID='1' value='2'></root>");
+        }
         [TestMethod]
         public void DoesGetSqlForMergeStrategyRun()
         {
