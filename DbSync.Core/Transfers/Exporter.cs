@@ -29,12 +29,15 @@ namespace DbSync.Core.Transfers
                         table.Initialize(connection, settings, errorHandler);
                         cmd.CommandText = $"SELECT * FROM {table.QualifiedName}";
                         var diffGenerator = new DiffGenerator();
+                        var file = Path.Combine(settings.Path, table.Name + ".xml");
+                        File.Move(file, file + ".old");
                         using (var source = cmd.ExecuteReader())
-                        using (var target = new XmlRecordDataReader(Path.Combine(settings.Path, table.Name + ".xml"), table))
+                        using (var target = new XmlRecordDataReader(file+".old", table))
                         using (var writer = new XmlDataWriter(table, settings))
                         {
                             diffGenerator.GenerateDifference(source, target, table, writer);
                         }
+                        File.Delete(file + ".old");
                     }
             }
         }
