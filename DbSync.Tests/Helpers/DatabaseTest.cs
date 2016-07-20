@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Serialization;
 
 namespace DbSync.Tests.Helpers
@@ -37,10 +38,11 @@ namespace DbSync.Tests.Helpers
         string Name => typeof(T).Name;
         string FQN => "dbo." + Name;
         string FileName => FQN + ".xml";
+        string ConnectionString { get; } = @"Data Source =.;Database=tempdb;Integrated Security=True";
         public void Create()
         {
             Folder = new TempFolder();
-            Db = new PetaPoco.Database(@"Data Source =.;Database=tempdb;Integrated Security=True", "SqlServer");
+            Db = new PetaPoco.Database(ConnectionString, "SqlServer");
             var columns = new List<string>();
             foreach(var property in typeof(T).GetProperties())
             {
@@ -65,9 +67,28 @@ namespace DbSync.Tests.Helpers
         public void Load(List<T> data)
         {
             LoadedData = data;
-            XmlSerializer serializer = new XmlSerializer(typeof(List<T>));
-            using (var stream = new System.IO.StreamWriter(System.IO.Path.Combine(Folder.Path, FileName)))
-                serializer.Serialize(stream, data);
+
+            var xmlSettings = new XmlWriterSettings
+            {
+                NewLineOnAttributes = true,
+                Indent = true,
+                IndentChars = "  ",
+                NewLineChars = Environment.NewLine,
+                OmitXmlDeclaration = true,
+            };
+            var writer = XmlWriter.Create(System.IO.Path.Combine(Folder.Path, FileName), xmlSettings);
+            writer.WriteStartElement("root");
+
+            foreach (var item in data)
+            {
+                writer.WriteStartElement("row");
+                foreach (var property in typeof(T).GetProperties())
+                    writer.WriteAttributeString(property.Name, property.GetValue(item).ToString());
+                writer.WriteEndElement();
+            }
+            writer.WriteEndElement();
+            writer.Flush();
+            writer.Close();
 
 
             var errorHandler = new Core.Services.DefaultErrorHandler();
@@ -78,7 +99,8 @@ namespace DbSync.Tests.Helpers
                 Tables = new List<Core.Table>
                 {
                     new Core.Table {Name = FQN }
-                }
+                },
+                ConnectionString = ConnectionString
             }, null, errorHandler);
         }
         public void RoundTripCheck()
