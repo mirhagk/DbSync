@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using DbSync.Core.Transfers;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -114,14 +115,15 @@ namespace DbSync.Tests.Helpers
         }
         public void Check(List<T> data)
         {
+            Exporter.Instance.Run(Settings, null, new Core.Services.DefaultErrorHandler());
+
             var serializer = new XmlSerializer(typeof(List<T>));
-            var tempFolder = new TempFolder();
-            var file = new TempFile(tempFolder);
-            using (var stream = new System.IO.StreamReader(file.Path))
+
+            using (var stream = new System.IO.StreamReader(System.IO.Path.Combine(Folder.Path, FileName)))
             {
                 var list = serializer.Deserialize(stream) as List<T>;
                 Assert.AreEqual(data.Count, list.Count);
-                for(int i = 0; i < data.Count; i++)
+                for (int i = 0; i < data.Count; i++)
                 {
                     Assert.AreEqual(data[i], list[i]);
                 }
