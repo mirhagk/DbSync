@@ -32,11 +32,12 @@ namespace DbSync.Tests.Helpers
     {
         List<T> LoadedData { get; set; }
         List<T> InitialData { get; set; }
+        PetaPoco.Database Db { get; set; }
         public void Create()
         {
-            var db = new PetaPoco.Database(@"Data Source =.; Database = tempdb; Integrated Security = True", null as string);
+            Db = new PetaPoco.Database(@"Data Source =.;Database=tempdb;Integrated Security=True", "SqlServer");
             var columns = new List<string>();
-            foreach(var property in typeof(T).GetProperties(System.Reflection.BindingFlags.Public))
+            foreach(var property in typeof(T).GetProperties())
             {
                 var dbType = "";
                 var type = property.PropertyType;
@@ -46,7 +47,7 @@ namespace DbSync.Tests.Helpers
                     dbType = "NVARCHAR(MAX) NULL";
                 columns.Add($"{property.Name} {dbType}");
             }
-            db.Execute($"CREATE TABLE {typeof(T).Name}({string.Join(", ", columns)})");
+            Db.Execute($"CREATE TABLE [{typeof(T).Name}]({string.Join(", ", columns)})");
         }
         public void Initialize()
         {
@@ -81,7 +82,8 @@ namespace DbSync.Tests.Helpers
         }
         public void Dispose()
         {
-
+            Db.Execute($"DROP TABLE [{typeof(T).Name}]");
+            Db.Dispose();
         }
     }
 }

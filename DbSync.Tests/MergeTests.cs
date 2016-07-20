@@ -16,12 +16,14 @@ namespace DbSync.Tests
         [TestMethod]
         public void TestSimpleImport()
         {
-            var test = new DatabaseTest<Values>();
-            test.Create();
+            using (var test = new DatabaseTest<Values>())
+            {
+                test.Create();
 
-            test.Initialize();
-            test.Load(new System.Collections.Generic.List<Values> { new Values { ID = 1, value = "test" }, new Values { ID = 2, value = "test2" } });
-            test.RoundTripCheck();
+                test.Initialize();
+                test.Load(new System.Collections.Generic.List<Values> { new Values { ID = 1, value = "test" }, new Values { ID = 2, value = "test2" } });
+                test.RoundTripCheck();
+            }
         }
         [TestMethod]
         public void DoesGetSqlForMergeStrategyRun()
