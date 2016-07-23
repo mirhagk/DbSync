@@ -83,7 +83,11 @@ namespace DbSync.Core
 
         public void Update(Dictionary<string, object> entry)
         {
-            RunSql($"UPDATE {table.QualifiedName} SET {string.Join(", ", table.Fields.Where(f => !f.IsPrimaryKey && !f.IsAuditingColumn).Select(f => $"{f.Name} = {Escape(entry[f.CanonicalName])}"))} WHERE {table.PrimaryKey} = {Escape(entry[table.PrimaryKey])}");
+            var fields = table.Fields.Where(f => !f.IsPrimaryKey && !f.IsAuditingColumn);
+            if (settings.MergeStrategy == Merge.Strategy.Override)
+                fields = fields.Where(f => entry[f.CanonicalName] != null);
+
+            RunSql($"UPDATE {table.QualifiedName} SET {string.Join(", ", fields.Select(f => $"{f.Name} = {Escape(entry[f.CanonicalName])}"))} WHERE {table.PrimaryKey} = {Escape(entry[table.PrimaryKey])}");
         }
         public void Delete(object key)
         {
