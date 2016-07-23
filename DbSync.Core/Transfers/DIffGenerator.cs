@@ -70,7 +70,8 @@ namespace DbSync.Core.Transfers
                 else
                     comparison = CompareObjects(source[table.PrimaryKey], target[table.PrimaryKey]);
 
-                dataWriter.Entry(SerializeRecordAsDictionary(sourceRecord, table));
+                if (sourceRecord != null)
+                    dataWriter.Entry(SerializeRecordAsDictionary(sourceRecord, table));
 
                 if (comparison == null)
                 {
