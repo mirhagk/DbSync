@@ -13,7 +13,7 @@ using System.Xml;
 
 namespace DbSync.Core.Transfers
 {
-    public class Importer : ImportTransfer
+    public class Importer : Transfer
     {
         public static Importer Instance = new Importer();
         private Importer() { }
