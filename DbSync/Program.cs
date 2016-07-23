@@ -64,13 +64,7 @@ namespace DbSync
                 if (cmdArgs.Export)
                     Exporter.Instance.Run(job, cmdArgs.Environment, errorHandler);
                 if (cmdArgs.Import)
-                    SmartTransfer.Instance.Run(job, cmdArgs.Environment, errorHandler);
-                if (cmdArgs.ImportDiff)
-                {
-                    var importDiffGenerator = ImportDiffGenerator.Instance;
-                    importDiffGenerator.Filename = cmdArgs.ImportScriptName;
-                    importDiffGenerator.Run(job, cmdArgs.Environment, errorHandler);
-                }
+                    Importer.Instance.Run(job, cmdArgs.Environment, errorHandler);
                 if (cmdArgs.ImportScript)
                 {
                     var importScriptGenerator = GenerateImportScript.Instance;
