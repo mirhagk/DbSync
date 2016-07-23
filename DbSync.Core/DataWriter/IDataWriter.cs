@@ -16,21 +16,43 @@ namespace DbSync.Core
     }
     class SqlSimpleDataWriter : IDataWriter
     {
+        interface IOutputFormatter
+        {
+            void Write(string sql);
+            void Close();
+        }
+        class SqlOutputFormatter : IOutputFormatter
+        {
+            SqlConnection connection;
+            public SqlOutputFormatter(string connectionString)
+            {
+                connection = new SqlConnection(connectionString);
+                connection.Open();
+            }
+            public void Write(string sql)
+            {
+                using (var cmd = new SqlCommand(sql, connection))
+                    cmd.ExecuteNonQuery();
+            }
+            public void Close()
+            {
+                connection.Close();
+                connection.Dispose();
+            }
+        }
         Table table;
-        SqlConnection connection;
         bool hasAdded = false;
         JobSettings settings;
+        IOutputFormatter outputFormatter;
         public SqlSimpleDataWriter(string connectionString, Table table, JobSettings settings)
         {
-            connection = new SqlConnection(connectionString);
-            connection.Open();
+            outputFormatter = new SqlOutputFormatter(connectionString);
             this.table = table;
             this.settings = settings;
         }
         void RunSql(string sql)
         {
-            using (var cmd = new SqlCommand(sql, connection))
-                cmd.ExecuteNonQuery();
+            outputFormatter.Write(sql);
         }
         string Escape(object value)
         {
@@ -73,8 +95,7 @@ namespace DbSync.Core
             {
                 RunSql($"IF OBJECTPROPERTY(OBJECT_ID('{table.QualifiedName}'), 'TableHasIdentity') = 1 SET IDENTITY_INSERT {table.QualifiedName} OFF");
             }
-            connection.Close();
-            connection.Dispose();
+            outputFormatter.Close();
         }
     }
 }
