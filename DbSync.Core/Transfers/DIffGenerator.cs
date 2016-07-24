@@ -41,7 +41,7 @@ namespace DbSync.Core.Transfers
         }
         Dictionary<string, object> SerializeRecordAsDictionary(List<object> record, Table table)
         {
-            Dictionary<string, object> result = new Dictionary<string, object>();
+            var result = new Dictionary<string, object>();
             for (int i = 0; i < record.Count; i++)
                 result.Add(table.Fields[i].CanonicalName, record[i]);
             return result;
