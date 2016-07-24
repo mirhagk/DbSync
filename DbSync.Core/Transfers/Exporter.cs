@@ -35,7 +35,7 @@ namespace DbSync.Core.Transfers
                         using (var target = new XmlRecordDataReader(file+".old", table))
                         using (var writer = new XmlDataWriter(table, settings))
                         {
-                            diffGenerator.GenerateDifference(source, target, table, writer);
+                            diffGenerator.GenerateDifference(source, target, table, writer, settings);
                         }
                         File.Delete(file + ".old");
                     }

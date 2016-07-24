@@ -33,7 +33,7 @@ namespace DbSync.Core.Transfers
                         using (var source = new XmlRecordDataReader(Path.Combine(settings.Path, table.Name + ".xml"), table))
                         using (var writer = new SqlSimpleDataWriter(settings.ConnectionString, table, settings))
                         {
-                            diffGenerator.GenerateDifference(source, target, table, writer);
+                            diffGenerator.GenerateDifference(source, target, table, writer, settings);
                         }
                     }
             }

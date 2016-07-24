@@ -46,7 +46,7 @@ namespace DbSync.Core.Transfers
                 result.Add(table.Fields[i].CanonicalName, record[i]);
             return result;
         }
-        public void GenerateDifference(IDataReader source, IDataReader target, Table table, IDataWriter dataWriter)
+        public void GenerateDifference(IDataReader source, IDataReader target, Table table, IDataWriter dataWriter, JobSettings settings)
         {
             if (source.FieldCount != target.FieldCount)
             {
@@ -95,7 +95,8 @@ namespace DbSync.Core.Transfers
                 //target contains a record not in source
                 else if (comparison == 1)
                 {
-                    dataWriter.Delete(target[table.PrimaryKey]);
+                    if ((table.MergeStrategy ?? settings.MergeStrategy) != Merge.Strategy.Override)
+                        dataWriter.Delete(target[table.PrimaryKey]);
                     consumeTarget = true;
                 }
                 //source contains a record not in target
