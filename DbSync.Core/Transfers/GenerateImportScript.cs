@@ -18,6 +18,7 @@ namespace DbSync.Core.Transfers
         public override void Run(JobSettings settings, string environment, IErrorHandler errorHandler)
         {
             using (var connection = new SqlConnection(settings.ConnectionString))
+            using (var file = new StreamWriter(Filename))
             {
                 connection.Open();
 
@@ -29,9 +30,9 @@ namespace DbSync.Core.Transfers
                         var diffGenerator = new DiffGenerator();
                         using (var target = cmd.ExecuteReader())
                         using (var source = new XmlRecordDataReader(Path.Combine(settings.Path, table.Name + ".xml"), table))
-                        using (var writer = new SqlSimpleDataWriter(settings.ConnectionString, table, settings))
+                        using (var writer = new SqlSimpleDataWriter(file, table, settings))
                         {
-                            diffGenerator.GenerateDifference(source, target, table, writer);
+                            diffGenerator.GenerateDifference(source, target, table, writer, settings);
                         }
                     }
             }
