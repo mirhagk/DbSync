@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -40,6 +41,20 @@ namespace DbSync.Core
                 connection.Dispose();
             }
         }
+        class FileOutputFormatter : IOutputFormatter
+        {
+            StreamWriter file;
+            public FileOutputFormatter(StreamWriter file)
+            {
+                this.file = file;
+            }
+            public void Write(string sql)
+            {
+                file.WriteLine(sql);
+            }
+            public void Close() { }
+
+        }
         Table table;
         bool hasAdded = false;
         JobSettings settings;
@@ -47,6 +62,12 @@ namespace DbSync.Core
         public SqlSimpleDataWriter(string connectionString, Table table, JobSettings settings)
         {
             outputFormatter = new SqlOutputFormatter(connectionString);
+            this.table = table;
+            this.settings = settings;
+        }
+        public SqlSimpleDataWriter(StreamWriter file, Table table, JobSettings settings)
+        {
+            outputFormatter = new FileOutputFormatter(file);
             this.table = table;
             this.settings = settings;
         }
