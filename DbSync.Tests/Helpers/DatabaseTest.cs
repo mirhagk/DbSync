@@ -105,7 +105,7 @@ namespace DbSync.Tests.Helpers
 
 
             var errorHandler = new Core.Services.DefaultErrorHandler();
-            var transfer = DbSync.Core.Transfers.SmartTransfer.Instance;
+            var transfer = DbSync.Core.Transfers.Importer.Instance;
 
             transfer.Run(Settings, null, errorHandler);
         }
