@@ -12,6 +12,7 @@ namespace DbSync.Core.DataWriter
     {
         XmlWriter writer { get; }
         Dictionary<string, string> canonicalToActualKeyMap { get; }
+        JobSettings settings { get; }
         public XmlDataWriter(Table table, JobSettings settings)
         {
             string path = Path.Combine(settings.Path, table.Name + ".xml");
@@ -25,6 +26,7 @@ namespace DbSync.Core.DataWriter
             };
             writer = XmlWriter.Create(path, xmlSettings);
             writer.WriteStartElement("root");
+            this.settings = settings;
 
             canonicalToActualKeyMap = table.Fields.ToDictionary(f => f.CanonicalName, f => f.Name);
         }
@@ -33,7 +35,8 @@ namespace DbSync.Core.DataWriter
             writer.WriteStartElement("row");
             foreach (var keyValPair in entry)
             {
-                writer.WriteAttributeString(canonicalToActualKeyMap[keyValPair.Key], keyValPair.Value.ToString());
+                if (!settings.IsAuditColumn(keyValPair.Key))
+                    writer.WriteAttributeString(canonicalToActualKeyMap[keyValPair.Key], keyValPair.Value?.ToString());
             }
             writer.WriteEndElement();
         }
