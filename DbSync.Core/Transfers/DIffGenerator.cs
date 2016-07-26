@@ -26,7 +26,12 @@ namespace DbSync.Core.Transfers
             var size = reader.FieldCount;
             List<object> result = new List<object>(size);
             for (int i = 0; i < size; i++)
-                result.Add(reader.GetValue(i));
+            {
+                var value = reader.GetValue(i);
+                if (value == DBNull.Value)
+                    value = null;
+                result.Add(value);
+            }
             return result;
         }
         public int? CompareObjects(object key1, object key2)
