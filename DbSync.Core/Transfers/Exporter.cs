@@ -39,11 +39,9 @@ namespace DbSync.Core.Transfers
                             {
                                 diffGenerator.GenerateDifference(source, target, table, writer, settings);
                             }
-                            if (table.Name == "dbo.Country")
-                                throw new Exception();
                             File.Delete(file + ".old");
                         }
-                        catch
+                        finally
                         {
                             if (File.Exists(file + ".old"))//If the old file still exists then something went wrong. Revert back to the original
                             {
@@ -51,7 +49,6 @@ namespace DbSync.Core.Transfers
                                     File.Delete(file);
                                 File.Move(file + ".old", file);
                             }
-                            throw;
                         }
                     }
             }
