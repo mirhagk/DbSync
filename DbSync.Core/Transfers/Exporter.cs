@@ -1,4 +1,5 @@
-﻿using DbSync.Core.DataWriter;
+﻿using DbSync.Core.DataReaders;
+using DbSync.Core.DataWriter;
 using DbSync.Core.Services;
 using System;
 using System.Collections.Generic;

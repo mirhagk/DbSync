@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using DbSync.Core.DataReaders;
 using DbSync.Core.Services;
 using Newtonsoft.Json.Linq;
 using System;
