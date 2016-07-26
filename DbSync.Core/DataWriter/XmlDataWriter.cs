@@ -36,7 +36,8 @@ namespace DbSync.Core.DataWriter
             foreach (var keyValPair in entry)
             {
                 if (!settings.IsAuditColumn(keyValPair.Key))
-                    writer.WriteAttributeString(canonicalToActualKeyMap[keyValPair.Key], keyValPair.Value?.ToString());
+                    if (keyValPair.Value != null)
+                        writer.WriteAttributeString(canonicalToActualKeyMap[keyValPair.Key], keyValPair.Value.ToString());
             }
             writer.WriteEndElement();
         }
