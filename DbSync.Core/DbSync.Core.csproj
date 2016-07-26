@@ -48,7 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataReaders\ImMemoryDataReader.cs" />
+    <Compile Include="DataReaders\InMemoryDataReader.cs" />
     <Compile Include="DataReaders\SimplifiedDataReader.cs" />
     <Compile Include="DataWriter\XmlDataWriter.cs" />
     <Compile Include="DbSyncException.cs" />
