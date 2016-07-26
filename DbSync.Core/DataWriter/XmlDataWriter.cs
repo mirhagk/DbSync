@@ -11,6 +11,7 @@ namespace DbSync.Core.DataWriter
     class XmlDataWriter : IDataWriter
     {
         XmlWriter writer { get; }
+        Dictionary<string, string> canonicalToActualKeyMap { get; }
         public XmlDataWriter(Table table, JobSettings settings)
         {
             string path = Path.Combine(settings.Path, table.Name + ".xml");
@@ -24,13 +25,15 @@ namespace DbSync.Core.DataWriter
             };
             writer = XmlWriter.Create(path, xmlSettings);
             writer.WriteStartElement("root");
+
+            canonicalToActualKeyMap = table.Fields.ToDictionary(f => f.CanonicalName, f => f.Name);
         }
         public void Entry(Dictionary<string, object> entry)
         {
             writer.WriteStartElement("row");
             foreach (var keyValPair in entry)
             {
-                writer.WriteAttributeString(keyValPair.Key, keyValPair.Value.ToString());
+                writer.WriteAttributeString(canonicalToActualKeyMap[keyValPair.Key], keyValPair.Value.ToString());
             }
             writer.WriteEndElement();
         }
