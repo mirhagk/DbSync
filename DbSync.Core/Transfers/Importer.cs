@@ -40,8 +40,16 @@ namespace DbSync.Core.Transfers
                     }
             }
         }
-        public List<T> ImportFromFileToMemory<T>(JobSettings settings, IErrorHandler errorHandler = null)
+        public List<T> ImportFromFileToMemory<T>(string path, IErrorHandler errorHandler = null)
         {
+            JobSettings settings = new JobSettings
+            {
+                Tables = new List<Table>(),
+                AuditColumns = new JobSettings.AuditSettings(),
+                IgnoreAuditColumnsOnExport = true,
+                UseAuditColumnsOnImport = false,
+                Path = Path.GetDirectoryName(path)
+            };
             errorHandler = errorHandler ?? new DefaultErrorHandler();
 
             Table table = new Table();
@@ -50,7 +58,7 @@ namespace DbSync.Core.Transfers
 
             var diffGenerator = new DiffGenerator();
             using (var target = new EmptyDataReader(table))
-            using (var source = new XmlRecordDataReader(Path.Combine(settings.Path, table.Name + ".xml"), table))
+            using (var source = new XmlRecordDataReader(path, table))
             using (var writer = new InMemoryDataWriter<T>(table))
             {
                 diffGenerator.GenerateDifference(source, target, table, writer, settings);
