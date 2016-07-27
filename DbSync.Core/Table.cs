@@ -43,24 +43,11 @@ namespace DbSync.Core
         {
             public string Name { get; set; }
         }
-
-        SqlConnection connection;
+        
         JobSettings settings;
-        public bool Initialize(SqlConnection connection, JobSettings settings, IErrorHandler errorHandler)
+        bool Initialize(JobSettings settings, IErrorHandler errorHandler)
         {
-            this.connection = connection;
             this.settings = settings;
-
-            Fields.AddRange(connection.Query<Field>(@"
-SELECT c.Name, c.is_identity as IsPrimaryKey, c.is_nullable AS IsNullable, df.definition AS DefaultValue
-FROM sys.all_objects o
-INNER JOIN sys.all_columns c ON o.object_id = c.object_id
-INNER JOIN sys.schemas s ON o.schema_id = s.schema_id
-LEFT JOIN sys.default_constraints df ON c.default_object_id =  df.object_id
-WHERE o.Name = @table AND s.Name = @schema
-ORDER BY column_id
-", new { table = BasicName, schema = SchemaName }));
-
             var auditColumns = settings.AuditColumns.AuditColumnNames().Select(c => c.ToLowerInvariant()).ToList();
             if (settings.UseAuditColumnsOnImport ?? false)
                 foreach (var field in Fields)
@@ -103,13 +90,32 @@ ORDER BY column_id
             data = data.Where(f => f != PrimaryKey);
 
             if (settings.UseAuditColumnsOnImport ?? false)
-                    data = data.Where(f => !settings.AuditColumns.AuditColumnNames().Select(a => a.ToLowerInvariant()).Contains(f));
+                data = data.Where(f => !settings.AuditColumns.AuditColumnNames().Select(a => a.ToLowerInvariant()).Contains(f));
 
             if (IsEnvironmentSpecific)
                 data = data.Where(f => f != "isenvironmentspecific");
 
             DataFields = data.ToList();
             return true;
+        }
+        bool TypeCanBeNull(Type type) => !type.IsValueType || Nullable.GetUnderlyingType(type) != null;
+        public bool Initialize<T>(JobSettings settings, IErrorHandler errorHandler)
+        {
+            Fields.AddRange(typeof(T).GetProperties().Select(p => new Core.Table.Field { Name = p.Name, IsNullable = TypeCanBeNull(p.PropertyType) }));
+            return Initialize(settings, errorHandler);
+        }
+        public bool Initialize(SqlConnection connection, JobSettings settings, IErrorHandler errorHandler)
+        {
+            Fields.AddRange(connection.Query<Field>(@"
+SELECT c.Name, c.is_identity as IsPrimaryKey, c.is_nullable AS IsNullable, df.definition AS DefaultValue
+FROM sys.all_objects o
+INNER JOIN sys.all_columns c ON o.object_id = c.object_id
+INNER JOIN sys.schemas s ON o.schema_id = s.schema_id
+LEFT JOIN sys.default_constraints df ON c.default_object_id =  df.object_id
+WHERE o.Name = @table AND s.Name = @schema
+ORDER BY column_id
+", new { table = BasicName, schema = SchemaName }));
+            return Initialize(settings, errorHandler);
         }
 
         [XmlIgnore]
