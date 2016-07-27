@@ -15,7 +15,7 @@ namespace DbSync.Core.DataReaders
         public InMemoryDataReader(Table table, IEnumerable<T> dataSource) : base(table.Fields)
         {
             DataSource = dataSource.GetEnumerator();
-            Properties = table.Fields.Select(f => f.CanonicalName).Join(typeof(T).GetProperties(), f => f, p => p.Name, (f, p) => p).ToList();
+            Properties = table.Fields.Select(f => f.CanonicalName).Join(typeof(T).GetProperties(), f => f, p => p.Name.ToLower(), (f, p) => p).ToList();
         }
 
         public override object GetValue(int i) => Properties[i].GetValue(currentRecord);
