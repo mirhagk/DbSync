@@ -67,6 +67,7 @@
     <Compile Include="Table.cs" />
     <Compile Include="Transfers\Transfer.cs" />
     <Compile Include="DataReaders\XmlRecordDataReader.cs" />
+    <Compile Include="DataWriter\InMemoryDataWriter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="DbSync.Core.nuspec" />
