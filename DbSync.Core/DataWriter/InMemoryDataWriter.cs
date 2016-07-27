@@ -13,19 +13,21 @@ namespace DbSync.Core.DataWriter
         Dictionary<string,PropertyInfo> PropertyMap { get; }
         public InMemoryDataWriter(Table table)
         {
-            Properties = table.Fields.Select(f => f.CanonicalName).Join(typeof(T).GetProperties(), f => f, p => p.Name.ToLower(), (f, p) => p).ToList();
+            PropertyMap = table.Fields.Select(f => f.CanonicalName).Join(typeof(T).GetProperties(), f => f, p => p.Name.ToLower(), (f, p) => new { f, p }).ToDictionary(x => x.f, x => x.p);
         }
-        void Add(Dictionary<string,object> entry){}
-        void Update(Dictionary<string, object> entry){}
-        void Delete(object key){}
-        void Entry(Dictionary<string, object> entry)
+        public void Add(Dictionary<string,object> entry){}
+        public void Update(Dictionary<string, object> entry){}
+        public void Delete(object key){}
+        public void Entry(Dictionary<string, object> entry)
         {
-            var newEntry = Activator.CreateInstance(typeof(T)) as T;
+            var newEntry = (T)Activator.CreateInstance(typeof(T));
             foreach(var pair in entry)
             {
                 PropertyMap[pair.Key].SetValue(newEntry,pair.Value);
             }
             Data.Add(newEntry);
         }
+
+        public void Dispose() { }
     }
 }
