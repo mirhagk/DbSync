@@ -28,7 +28,13 @@ namespace DbSync.Core.DataWriter
                 else if (value as string == "1")
                     value = "true";
             }
-            property.SetValue(entry, Convert.ChangeType(value, property.PropertyType));
+            if (value == null)
+                property.SetValue(entry, null);
+            else
+            {
+                var type = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+                property.SetValue(entry, Convert.ChangeType(value, type));
+            }
         }
         public void Entry(Dictionary<string, object> entry)
         {
