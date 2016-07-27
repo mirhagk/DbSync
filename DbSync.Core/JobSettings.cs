@@ -17,10 +17,14 @@ namespace DbSync.Core
             public string ModifiedUser { get; set; }
             public IEnumerable<string> AuditColumnNames()
             {
-                yield return CreatedDate;
-                yield return CreatedUser;
-                yield return ModifiedDate;
-                yield return ModifiedUser;
+                if (CreatedDate != null)
+                    yield return CreatedDate;
+                if (CreatedUser != null)
+                    yield return CreatedUser;
+                if (ModifiedDate != null)
+                    yield return ModifiedDate;
+                if (ModifiedUser != null)
+                    yield return ModifiedUser;
             }
         }
         public string ConnectionString { get; set; }

@@ -1,4 +1,6 @@
-﻿using DbSync.Core.Services;
+﻿using DbSync.Core.DataReaders;
+using DbSync.Core.DataWriter;
+using DbSync.Core.Services;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -15,72 +17,41 @@ namespace DbSync.Core.Transfers
     {
         public static Exporter Instance = new Exporter();
         private Exporter() { }
-        void WriteQueryToXmlFile(SqlCommand cmd, string path, JobSettings settings)
-        {
-            using (var reader = cmd.ExecuteReader())
-            {
-
-                var xmlSettings = new XmlWriterSettings
-                {
-                    NewLineOnAttributes = true,
-                    Indent = true,
-                    IndentChars = "  ",
-                    NewLineChars = Environment.NewLine,
-                    OmitXmlDeclaration = true,
-                };
-                var writer = XmlWriter.Create(path, xmlSettings);
-                writer.WriteStartElement("root");
-
-                while (reader.Read())
-                {
-                    writer.WriteStartElement("row");
-                    for (int i = 0; i < reader.FieldCount; i++)
-                    {
-                        var fieldName = reader.GetName(i);
-                        if (settings.IgnoreAuditColumnsOnExport.Value && settings.IsAuditColumn(fieldName))
-                            continue;
-                        if (reader.IsDBNull(i))//for null values just don't output the attribute at all
-                            continue;
-                        writer.WriteAttributeString(reader.GetName(i), reader.GetValue(i).ToString());
-                    }
-                    writer.WriteEndElement();
-                }
-                writer.WriteEndElement();
-                writer.Flush();
-                writer.Close();
-            }
-        }
         public override void Run(JobSettings settings, string environment, IErrorHandler errorHandler)
         {
-            if (!Directory.Exists(settings.Path))
-                Directory.CreateDirectory(settings.Path);
-            using (var conn = new SqlConnection(settings.ConnectionString))
+
+            using (var connection = new SqlConnection(settings.ConnectionString))
             {
-                conn.Open();
+                connection.Open();
+
                 foreach (var table in settings.Tables)
-                {
-                    if (!table.Initialize(conn, settings, errorHandler))
-                        continue;
-
-                    using (var cmd = conn.CreateCommand())
+                    using (var cmd = connection.CreateCommand())
                     {
-                        cmd.CommandText = "SELECT * FROM " + table.QualifiedName;
-                        if (table.IsEnvironmentSpecific)
+                        table.Initialize(connection, settings, errorHandler);
+                        cmd.CommandText = $"SELECT * FROM {table.QualifiedName}";
+                        var diffGenerator = new DiffGenerator();
+                        var file = Path.Combine(settings.Path, table.Name + ".xml");
+                        try
                         {
-                            cmd.CommandText = $"SELECT {table.PrimaryKey}, {string.Join(", ", table.DataFields)} FROM {table.QualifiedName} WHERE IsEnvironmentSpecific = 0";
+                            File.Move(file, file + ".old");
+                            using (var source = cmd.ExecuteReader())
+                            using (var target = new XmlRecordDataReader(file + ".old", table))
+                            using (var writer = new XmlDataWriter(table, settings))
+                            {
+                                diffGenerator.GenerateDifference(source, target, table, writer, settings);
+                            }
+                            File.Delete(file + ".old");
                         }
-                        cmd.CommandType = CommandType.Text;
-
-                        WriteQueryToXmlFile(cmd, Path.Combine(settings.Path, table.Name), settings);
-
-                        if (table.IsEnvironmentSpecific)
+                        finally
                         {
-                            //Switch IsEnvironmentSpecific = 0 to IsEnvironmentSpecific = 1
-                            cmd.CommandText = cmd.CommandText.Substring(0, cmd.CommandText.Length - 1) + "1";
-                            WriteQueryToXmlFile(cmd, Path.Combine(settings.Path, table.Name) + "." + environment, settings);
+                            if (File.Exists(file + ".old"))//If the old file still exists then something went wrong. Revert back to the original
+                            {
+                                if (File.Exists(file))
+                                    File.Delete(file);
+                                File.Move(file + ".old", file);
+                            }
                         }
                     }
-                }
             }
         }
     }
