@@ -1,4 +1,6 @@
 ﻿using Dapper;
+using DbSync.Core.DataReaders;
+using DbSync.Core.DataWriter;
 using DbSync.Core.Services;
 using Newtonsoft.Json.Linq;
 using System;
@@ -13,57 +15,54 @@ using System.Xml;
 
 namespace DbSync.Core.Transfers
 {
-    public class Importer : ImportTransfer
+    public class Importer : Transfer
     {
         public static Importer Instance = new Importer();
         private Importer() { }
-		void ImportTable(SqlConnection connection, Table table, JobSettings settings, IErrorHandler errorHandler)
-		{
-			Console.WriteLine($"Importing table {table.Name}");
-
-            connection.Execute(GetTempTableScript(table));
-
-            var mergeStrategy = table.MergeStrategy ?? settings.MergeStrategy;
-
-            table.UseDefaults = mergeStrategy != Merge.Strategy.Override; 
-
-            if (table.ByEnvironment)
-            {
-                if (File.Exists(table.EnvironmentSpecificFileName))
-                    CopyFromFileToTempTable(connection, table.EnvironmentSpecificFileName, table, errorHandler);
-            }
-            else
-                CopyFromFileToTempTable(connection, Path.Combine(settings.Path, table.Name), table, errorHandler);
-            
-			if (table.IsEnvironmentSpecific)
-				if (File.Exists(table.EnvironmentSpecificFileName))
-					CopyFromFileToTempTable(connection, table.EnvironmentSpecificFileName, table, errorHandler);
-
-            try
-            {
-                connection.Execute(Merge.GetSqlForMergeStrategy(settings, table));
-            }
-            catch (SqlException ex)
-            {
-                errorHandler.Error($"Error while importing {table.Name}: {ex.Message}");
-            }
-		}
         public override void Run(JobSettings settings, string environment, IErrorHandler errorHandler)
         {
-            using (var conn = new SqlConnection(settings.ConnectionString))
+            using (var connection = new SqlConnection(settings.ConnectionString))
             {
-                conn.Open();
-                foreach(var table in settings.Tables)
-                    conn.Execute($"ALTER TABLE {table.QualifiedName} NOCHECK CONSTRAINT ALL");
+                connection.Open();
 
                 foreach (var table in settings.Tables)
-                {
-                    if (table.Initialize(conn, settings, errorHandler))
-                        ImportTable(conn, table, settings, errorHandler);
-                }
+                    using (var cmd = connection.CreateCommand())
+                    {
+                        table.Initialize(connection, settings, errorHandler);
+                        cmd.CommandText = $"SELECT * FROM {table.QualifiedName}";
+                        var diffGenerator = new DiffGenerator();
+                        using (var target = cmd.ExecuteReader())
+                        using (var source = new XmlRecordDataReader(Path.Combine(settings.Path, table.Name + ".xml"), table))
+                        using (var writer = new SqlSimpleDataWriter(settings.ConnectionString, table, settings))
+                        {
+                            diffGenerator.GenerateDifference(source, target, table, writer, settings);
+                        }
+                    }
+            }
+        }
+        public List<T> ImportFromFileToMemory<T>(string path, IErrorHandler errorHandler = null)
+        {
+            JobSettings settings = new JobSettings
+            {
+                Tables = new List<Table>(),
+                AuditColumns = new JobSettings.AuditSettings(),
+                IgnoreAuditColumnsOnExport = true,
+                UseAuditColumnsOnImport = false,
+                Path = Path.GetDirectoryName(path)
+            };
+            errorHandler = errorHandler ?? new DefaultErrorHandler();
 
-                foreach (var table in settings.Tables)
-                    conn.Execute($"ALTER TABLE {table.QualifiedName} CHECK CONSTRAINT ALL");
+            Table table = new Table();
+            table.Name = typeof(T).Name;
+            table.Initialize<T>(settings,errorHandler);
+
+            var diffGenerator = new DiffGenerator();
+            using (var target = new EmptyDataReader(table))
+            using (var source = new XmlRecordDataReader(path, table))
+            using (var writer = new InMemoryDataWriter<T>(table))
+            {
+                diffGenerator.GenerateDifference(source, target, table, writer, settings);
+                return writer.Data;
             }
         }
     }
