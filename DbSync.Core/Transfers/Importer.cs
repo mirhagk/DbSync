@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using DbSync.Core.DataReaders;
+using DbSync.Core.DataWriter;
 using DbSync.Core.Services;
 using Newtonsoft.Json.Linq;
 using System;
@@ -37,6 +38,23 @@ namespace DbSync.Core.Transfers
                             diffGenerator.GenerateDifference(source, target, table, writer, settings);
                         }
                     }
+            }
+        }
+        public List<T> ImportFromFileToMemory<T>(JobSettings settings, IErrorHandler errorHandler = null)
+        {
+            errorHandler = errorHandler ?? new DefaultErrorHandler();
+
+            Table table = new Table();
+            table.Name = typeof(T).Name;
+            table.Initialize<T>(settings,errorHandler);
+
+            var diffGenerator = new DiffGenerator();
+            using (var target = new EmptyDataReader(table))
+            using (var source = new XmlRecordDataReader(Path.Combine(settings.Path, table.Name + ".xml"), table))
+            using (var writer = new InMemoryDataWriter<T>(table))
+            {
+                diffGenerator.GenerateDifference(source, target, table, writer, settings);
+                return writer.Data;
             }
         }
     }
