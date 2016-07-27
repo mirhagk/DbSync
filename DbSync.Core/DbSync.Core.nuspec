@@ -3,7 +3,7 @@
   <metadata>
     <id>$id$</id>
     <version>$version$</version>
-    <title>$title$</title>
+    <title>DbSync.Core</title>
     <authors>$author$</authors>
     <owners>$author$</owners>
     <!--<licenseUrl>http://LICENSE_URL_HERE_OR_DELETE_THIS_LINE</licenseUrl>-->
@@ -11,7 +11,7 @@
     <!--<iconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</iconUrl>-->
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
-    <releaseNotes>The initial nuget release, contains an importer, an exporter and the ability to generate an export script</releaseNotes>
+    <releaseNotes>Supports a new suite of import/export targets</releaseNotes>
     <copyright>Copyright 2015</copyright>
     <tags>C# .NET SQL MSSQL XML Database Data</tags>
   </metadata>
