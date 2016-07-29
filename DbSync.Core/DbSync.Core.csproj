@@ -56,7 +56,7 @@
     <Compile Include="DataReaders\DictionaryDataReader.cs" />
     <Compile Include="DataWriter\IDataWriter.cs" />
     <Compile Include="Services\IErrorHandler.cs" />
-    <Compile Include="Transfers\DIffGenerator.cs" />
+    <Compile Include="Transfers\DiffGenerator.cs" />
     <Compile Include="Transfers\Exporter.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Transfers\GenerateImportScript.cs" />
@@ -91,9 +91,9 @@
   </Target>
   <Target Name="AfterBuild">
   </Target>
-  --><Target Name="AfterBuild" Condition=" '$(Configuration)' == 'Release'">
-
-    <Exec Command="nuget pack $(ProjectFileName) -Prop Configuration=Release"></Exec>
-
-</Target>
+  -->
+  <Target Name="AfterBuild" Condition=" '$(Configuration)' == 'Release'">
+    <Exec Command="nuget pack $(ProjectFileName) -Prop Configuration=Release">
+    </Exec>
+  </Target>
 </Project>
