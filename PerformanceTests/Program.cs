@@ -64,7 +64,18 @@ namespace PerformanceTests
 
             Console.WriteLine(JsonConvert.SerializeObject(info, Formatting.Indented));
 
+            List<Test> tests = new List<Test>();
+            tests.Add(new Test { ID = 1, Value = "teststeast" });
+            tests.Add(new Test { ID = 3, Value = "such test" });
+
+            DbSync.Core.Transfers.Transfer.ExportFromMemoryToFile(@"C:\temp\test.xml", tests);
+
             Console.ReadKey();
+        }
+        class Test
+        {
+            public int ID { get; set; }
+            public string Value { get; set; }
         }
     }
 }
