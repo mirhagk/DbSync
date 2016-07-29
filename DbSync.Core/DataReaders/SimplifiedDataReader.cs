@@ -4,35 +4,20 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml;
 
-namespace DbSync
+namespace DbSync.Core.DataReaders
 {
-    class XmlRecordDataReader : IDataReader
+    abstract class SimplifiedDataReader : IDataReader
     {
-        Dictionary<string, object> currentRecord;
-        XmlReader xmlReader;
-        List<string> fields;
-        public XmlRecordDataReader(string path, List<string> fields)
+        protected List<Table.Field> fields;
+
+        public SimplifiedDataReader(List<Table.Field> fields)
         {
             this.fields = fields;
-            xmlReader = XmlReader.Create(path, new XmlReaderSettings { Async = true });
-        }
-        public object this[string name]
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
         }
 
-        public object this[int i]
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public object this[string name] => this[fields.FindIndex(f => f.CanonicalName == name)];
+        public object this[int i] => GetValue(i);
 
         public int Depth
         {
@@ -42,13 +27,7 @@ namespace DbSync
             }
         }
 
-        public int FieldCount
-        {
-            get
-            {
-                return fields.Count;
-            }
-        }
+        public int FieldCount => fields.Count;
 
         public bool IsClosed
         {
@@ -69,6 +48,15 @@ namespace DbSync
         public void Close()
         {
             throw new NotImplementedException();
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            //No cleanup work to do, but child classes might have some
+        }
+        public void Dispose()
+        {
+            Dispose(true);
         }
 
         public bool GetBoolean(int i)
@@ -171,80 +159,20 @@ namespace DbSync
             throw new NotImplementedException();
         }
 
-        public object GetValue(int i)
-        {
-            if (currentRecord.ContainsKey(fields[i]))
-                return currentRecord[fields[i]];
-            return null;
-        }
+        public abstract object GetValue(int i);
 
         public int GetValues(object[] values)
         {
             throw new NotImplementedException();
         }
 
-        public bool IsDBNull(int i)
-        {
-            return !currentRecord.ContainsKey(fields[i]);
-        }
+        public abstract bool IsDBNull(int i);
 
         public bool NextResult()
         {
             throw new NotImplementedException();
         }
 
-        public bool Read()
-        {
-            currentRecord = new Dictionary<string, object>();
-            if (!xmlReader.ReadToFollowing("row"))
-            {
-                return false;
-            }
-            xmlReader.MoveToFirstAttribute();
-            
-            for (int p = 0; p < xmlReader.AttributeCount; p++)
-            {
-                if (!fields.Contains(xmlReader.Name))
-                    fields.Add(xmlReader.Name);
-                currentRecord[xmlReader.Name] = xmlReader.GetValueAsync().Result;
-                xmlReader.MoveToNextAttribute();
-            }
-            return true;
-        }
-
-        #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    // TODO: dispose managed state (managed objects).          
-                }
-
-                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-                // TODO: set large fields to null.
-
-                disposedValue = true;
-            }
-        }
-
-        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources. 
-        // ~XmlDataReader() {
-        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-        //   Dispose(false);
-        // }
-
-        // This code added to correctly implement the disposable pattern.
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-            Dispose(true);
-            // TODO: uncomment the following line if the finalizer is overridden above.
-            // GC.SuppressFinalize(this);
-        }
-        #endregion
+        public abstract bool Read();
     }
 }

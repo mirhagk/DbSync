@@ -1,10 +1,4 @@
-﻿UPDATE t
-SET @columnUpdateList
-FROM @target t
-INNER JOIN @source s ON t.@id = s.@id
-
-
-IF OBJECTPROPERTY(OBJECT_ID('@target'), 'TableHasIdentity') = 1
+﻿IF OBJECTPROPERTY(OBJECT_ID('@target'), 'TableHasIdentity') = 1
 	SET IDENTITY_INSERT @target ON
 
 INSERT INTO @target (@id, @columns)

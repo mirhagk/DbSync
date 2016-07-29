@@ -36,7 +36,7 @@ namespace DbSync
             WriteLine($"Exporting current data to {Path.GetFullPath(settings.Path)}");
             var stopwatch = new System.Diagnostics.Stopwatch();
             stopwatch.Start();
-            Exporter.Instance.Run(settings, cmdArgs.Environment);
+            Exporter.Instance.Run(settings, cmdArgs.Environment, new Core.Services.DefaultErrorHandler());
             stopwatch.Stop();
             WriteLine($"Finished export, {stopwatch.ElapsedMilliseconds}ms elapsed");
             settings.Path = rootPath;

@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using DbSync.Core.Services;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -18,51 +19,103 @@ namespace DbSync.Core
         public string Name { get; set; }
         [XmlAttribute]
         public bool IsEnvironmentSpecific { get; set; }
+        [XmlIgnore]
+        public Merge.Strategy? MergeStrategy { get; set; }
+        [XmlAttribute]
+        public bool ByEnvironment { get; set; }
+
+        [XmlAttribute(nameof(MergeStrategy))]
+        private Merge.Strategy MergeStrategySerialized
+        {
+            get
+            {
+                return MergeStrategy.Value;
+            }
+            set
+            {
+                MergeStrategy = value;
+            }
+        }
+        private bool ShouldSerializeMergeStrategySerialized() => MergeStrategy.HasValue;
         #endregion
 
         class Schema
         {
             public string Name { get; set; }
         }
-
-        SqlConnection connection;
+        
         JobSettings settings;
-        public void Initialize(SqlConnection connection, JobSettings settings)
+        bool Initialize(JobSettings settings, IErrorHandler errorHandler)
         {
-            this.connection = connection;
             this.settings = settings;
-
-            Fields.AddRange(connection.Query<Schema>(@"
-SELECT c.Name 
-FROM sys.all_objects o
-LEFT JOIN sys.all_columns c ON o.object_id = c.object_id
-WHERE o.name = @table
-ORDER BY column_id
-", new { table = BasicName }).Select(x => x.Name));
+            var auditColumns = settings.AuditColumns.AuditColumnNames().Select(c => c.ToLowerInvariant()).ToList();
+            if (settings.UseAuditColumnsOnImport ?? false)
+                foreach (var field in Fields)
+                {
+                    if (auditColumns.Contains(field.CanonicalName))
+                        field.IsAuditingColumn = true;
+                }
 
             if (!Fields.Any())
-                throw new DbSyncException($"Could not find any information for table {Name}. Make sure it exists in the target database");
+            {
+                errorHandler.Error($"Could not find any information for table {Name}. Make sure it exists in the target database");
+                return false;
+            }
 
-            var data = Fields.Select(f => f.ToLowerInvariant());
+            var data = Fields.Select(f => f.Name.ToLowerInvariant());
 
             if (PrimaryKey == null)
             {
-                PrimaryKey = data.SingleOrDefault(f => f == "id" || f == BasicName.ToLowerInvariant() + "id");
+                var primaryKeys = Fields.Where(f => f.IsPrimaryKey).ToList();
+                if (primaryKeys.Count == 0)
+                {
+                    //errorHandler.Warning($"No primary key set for table {Name}, trying to infer from name");
+                    primaryKeys = Fields.Where(f => f.Name.ToLowerInvariant() == "id" || f.Name.ToLowerInvariant() == BasicName.ToLowerInvariant() + "id").ToList();
+                }
+                if (primaryKeys.Count > 1)
+                {
+                    errorHandler.Error($"Multiple primary keys found for table {Name} ({string.Join(", ", primaryKeys.Select(pk => pk.Name))}). Please specify one manually.");
+                    return false;
+                }
+                if (!primaryKeys.Any())
+                {
+                    errorHandler.Error($"No primary key could be found for table {Name}. Please specify one manually");
+                    return false;
+                }
 
-                if (PrimaryKey == null)
-                    throw new DbSyncException($"No primary key found for table {Name}");
+                PrimaryKey = primaryKeys.Single().Name;
             }
-            else
-                PrimaryKey = PrimaryKey.ToLowerInvariant();
+            PrimaryKey = PrimaryKey.ToLowerInvariant();
 
-            data = data
-                .Where(f => f != PrimaryKey)
-                .Where(f => !settings.AuditColumns.AuditColumnNames().Select(a=>a.ToLowerInvariant()).Contains(f));
+            data = data.Where(f => f != PrimaryKey);
+
+            if (settings.UseAuditColumnsOnImport ?? false)
+                data = data.Where(f => !settings.AuditColumns.AuditColumnNames().Select(a => a.ToLowerInvariant()).Contains(f));
 
             if (IsEnvironmentSpecific)
                 data = data.Where(f => f != "isenvironmentspecific");
 
             DataFields = data.ToList();
+            return true;
+        }
+        bool TypeCanBeNull(Type type) => !type.IsValueType || Nullable.GetUnderlyingType(type) != null;
+        public bool Initialize<T>(JobSettings settings, IErrorHandler errorHandler)
+        {
+            Fields.AddRange(typeof(T).GetProperties().Select(p => new Core.Table.Field { Name = p.Name, IsNullable = TypeCanBeNull(p.PropertyType) }));
+            return Initialize(settings, errorHandler);
+        }
+        public bool Initialize(SqlConnection connection, JobSettings settings, IErrorHandler errorHandler)
+        {
+            Fields.AddRange(connection.Query<Field>(@"
+SELECT c.Name, c.is_identity as IsPrimaryKey, c.is_nullable AS IsNullable, df.definition AS DefaultValue
+FROM sys.all_objects o
+INNER JOIN sys.all_columns c ON o.object_id = c.object_id
+INNER JOIN sys.schemas s ON o.schema_id = s.schema_id
+LEFT JOIN sys.default_constraints df ON c.default_object_id =  df.object_id
+WHERE o.Name = @table AND s.Name = @schema
+ORDER BY column_id
+", new { table = BasicName, schema = SchemaName }));
+            return Initialize(settings, errorHandler);
         }
 
         [XmlIgnore]
@@ -73,11 +126,21 @@ ORDER BY column_id
         public string QualifiedName => $"{SchemaName}.[{BasicName}]";
         [XmlIgnore]
         public string EnvironmentSpecificFileName => Path.Combine(settings.Path, Name) + "." + settings.CurrentEnvironment;
+        public class Field
+        {
+            public string Name { get; set; }
+            public string CanonicalName => Name.ToLowerInvariant();
+            public bool IsPrimaryKey { get; set; }
+            public bool IsNullable { get; set; }
+            public bool IsAuditingColumn { get; set; }
+            public string DefaultValue { get; set; }
+        }
         [XmlIgnore]
-        public List<string> Fields { get; } = new List<string>();
+        public List<Field> Fields { get; } = new List<Field>();
         [XmlIgnore]
         public List<string> DataFields { get; private set; }
         [XmlAttribute]
         public string PrimaryKey { get; set; }
+        public bool UseDefaults { get; set; }
     }
 }

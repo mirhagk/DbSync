@@ -17,10 +17,14 @@ namespace DbSync.Core
             public string ModifiedUser { get; set; }
             public IEnumerable<string> AuditColumnNames()
             {
-                yield return CreatedDate;
-                yield return CreatedUser;
-                yield return ModifiedDate;
-                yield return ModifiedUser;
+                if (CreatedDate != null)
+                    yield return CreatedDate;
+                if (CreatedUser != null)
+                    yield return CreatedUser;
+                if (ModifiedDate != null)
+                    yield return ModifiedDate;
+                if (ModifiedUser != null)
+                    yield return ModifiedUser;
             }
         }
         public string ConnectionString { get; set; }
@@ -28,12 +32,12 @@ namespace DbSync.Core
         [XmlArrayItem(ElementName = "Table")]
         public List<Table> Tables { get; set; } = new List<Table>();
         public string Path { get; set; } = System.IO.Path.GetFullPath(".");
-        public Merge.Strategy MergeStrategy { get; set; } = Merge.Strategy.MergeWithoutDelete;
+        public Merge.Strategy? MergeStrategy { get; set; } = null;
         public string Name { get; set; }
         public AuditSettings AuditColumns { get; set; }
-        public bool IgnoreAuditColumnsOnExport { get; set; } = false;
-        public bool UseAuditColumnsOnImport { get; set; } = false;
-        public bool DisableConstraintsOnImport { get; set; } = false;
+        public bool? IgnoreAuditColumnsOnExport { get; set; } = null;
+        public bool? UseAuditColumnsOnImport { get; set; } = null;
+        public bool? DisableConstraintsOnImport { get; set; } = null;
         public string CurrentEnvironment { get; set; }
 
         public bool IsAuditColumn(string fieldName)

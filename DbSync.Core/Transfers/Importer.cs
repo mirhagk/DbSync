@@ -1,4 +1,7 @@
 ﻿using Dapper;
+using DbSync.Core.DataReaders;
+using DbSync.Core.DataWriter;
+using DbSync.Core.Services;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -12,35 +15,54 @@ using System.Xml;
 
 namespace DbSync.Core.Transfers
 {
-    public class Importer : ImportTransfer
+    public class Importer : Transfer
     {
         public static Importer Instance = new Importer();
         private Importer() { }
-		void ImportTable(SqlConnection connection, Table table, JobSettings settings)
-		{
-			Console.WriteLine($"Importing table {table.Name}");
-
-            connection.Execute(GetTempTableScript(table));
-
-			CopyFromFileToTable(connection, Path.Combine(settings.Path, table.Name), "##" + table.BasicName, table.Fields);
-
-			if (table.IsEnvironmentSpecific)
-				if (File.Exists(table.EnvironmentSpecificFileName))
-					CopyFromFileToTable(connection, table.EnvironmentSpecificFileName, "##" + table.BasicName, table.Fields);
-
-            connection.Execute(Merge.GetSqlForMergeStrategy(settings, table.QualifiedName, "##" + table.BasicName, table.PrimaryKey, table.DataFields));
-		}
-        public override void Run(JobSettings settings, string environment)
+        public override void Run(JobSettings settings, string environment, IErrorHandler errorHandler)
         {
-            using (var conn = new SqlConnection(settings.ConnectionString))
+            using (var connection = new SqlConnection(settings.ConnectionString))
             {
-                conn.Open();
+                connection.Open();
+
                 foreach (var table in settings.Tables)
-                {
-                    table.Initialize(conn, settings);
-                    
-                    ImportTable(conn, table, settings);
-                }
+                    using (var cmd = connection.CreateCommand())
+                    {
+                        table.Initialize(connection, settings, errorHandler);
+                        cmd.CommandText = $"SELECT * FROM {table.QualifiedName}";
+                        var diffGenerator = new DiffGenerator();
+                        using (var target = cmd.ExecuteReader())
+                        using (var source = new XmlRecordDataReader(Path.Combine(settings.Path, table.Name + ".xml"), table))
+                        using (var writer = new SqlSimpleDataWriter(settings.ConnectionString, table, settings))
+                        {
+                            diffGenerator.GenerateDifference(source, target, table, writer, settings);
+                        }
+                    }
+            }
+        }
+        public List<T> ImportFromFileToMemory<T>(string path, IErrorHandler errorHandler = null)
+        {
+            JobSettings settings = new JobSettings
+            {
+                Tables = new List<Table>(),
+                AuditColumns = new JobSettings.AuditSettings(),
+                IgnoreAuditColumnsOnExport = true,
+                UseAuditColumnsOnImport = false,
+                Path = Path.GetDirectoryName(path)
+            };
+            errorHandler = errorHandler ?? new DefaultErrorHandler();
+
+            Table table = new Table();
+            table.Name = typeof(T).Name;
+            table.Initialize<T>(settings,errorHandler);
+
+            var diffGenerator = new DiffGenerator();
+            using (var target = new EmptyDataReader(table))
+            using (var source = new XmlRecordDataReader(path, table))
+            using (var writer = new InMemoryDataWriter<T>(table))
+            {
+                diffGenerator.GenerateDifference(source, target, table, writer, settings);
+                return writer.Data;
             }
         }
     }
