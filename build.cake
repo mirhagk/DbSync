@@ -6,7 +6,7 @@ Task("Default")
   var solution = "./DbSync.sln"; 
   NuGetRestore(solution);
   XBuild(solution);
-  Information("Hello World!");
+  Information("Project successfully built!");
 });
 
 RunTarget(target);
