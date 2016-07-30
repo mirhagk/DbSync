@@ -1,5 +1,5 @@
 ﻿using DbSync.Core.Transfers;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -129,6 +129,8 @@ namespace DbSync.Tests.Helpers
             using (var stream = new System.IO.StreamReader(System.IO.Path.Combine(Folder.Path, FileName)))
             {
                 var list = (serializer.Deserialize(stream) as XmlFileSchema).root;
+
+
                 Assert.AreEqual(data.Count, list.Count);
                 for (int i = 0; i < data.Count; i++)
                 {

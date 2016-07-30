@@ -1,5 +1,5 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using DbSync.Core;
 using DbSync.Tests.Helpers;
 using System.Xml.Serialization;
@@ -8,7 +8,6 @@ using System.Linq;
 
 namespace DbSync.Tests
 {
-    [TestClass]
     public class MergeTests
     {
         public struct Values
@@ -34,7 +33,7 @@ namespace DbSync.Tests
             int id = 1;
             return values.Select(v => new Tests.MergeTests.Values { id = id++, value = v }).ToList();
         }
-        [TestMethod]
+        [Test]
         public void TestSimpleImport()
         {
             using (var test = new DatabaseTest<Values>())
@@ -46,7 +45,7 @@ namespace DbSync.Tests
                 test.RoundTripCheck();
             }
         }
-        [TestMethod]
+        [Test]
         public void DoesEscaping()
         {
             using (var test = new DatabaseTest<Values>())
