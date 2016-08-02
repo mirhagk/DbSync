@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using DbSync.Core.Attributes;
 using DbSync.Core.Services;
 using System;
 using System.Collections.Generic;
@@ -101,7 +102,7 @@ namespace DbSync.Core
         bool TypeCanBeNull(Type type) => !type.IsValueType || Nullable.GetUnderlyingType(type) != null;
         public bool Initialize<T>(JobSettings settings, IErrorHandler errorHandler)
         {
-            Fields.AddRange(typeof(T).GetProperties().Select(p => new Core.Table.Field { Name = p.Name, IsNullable = TypeCanBeNull(p.PropertyType) }));
+            Fields.AddRange(typeof(T).GetProperties().Select(p => new Core.Table.Field { Name = p.Name, IsNullable = TypeCanBeNull(p.PropertyType), IsPrimaryKey = p.GetCustomAttributes(false).Any(a => a is PrimaryKeyAttribute) }));
             return Initialize(settings, errorHandler);
         }
         public bool Initialize(SqlConnection connection, JobSettings settings, IErrorHandler errorHandler)
