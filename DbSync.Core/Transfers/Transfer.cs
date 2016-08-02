@@ -51,7 +51,7 @@ namespace DbSync.Core.Transfers
             var diffGenerator = new DiffGenerator();
             using (var target = new EmptyDataReader(table))
             using (var source = new InMemoryDataReader<T>(table, data))
-            using (var writer = new XmlDataWriter(table, settings))
+            using (var writer = new XmlDataWriter(table, settings, path))
             {
                 diffGenerator.GenerateDifference(source, target, table, writer, settings);
             }

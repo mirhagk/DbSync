@@ -13,9 +13,9 @@ namespace DbSync.Core.DataWriter
         XmlWriter writer { get; }
         Dictionary<string, string> canonicalToActualKeyMap { get; }
         JobSettings settings { get; }
-        public XmlDataWriter(Table table, JobSettings settings)
+        public XmlDataWriter(Table table, JobSettings settings, string path = null)
         {
-            string path = Path.Combine(settings.Path, table.Name + ".xml");
+            path = path ?? Path.Combine(settings.Path, table.Name + ".xml");
             var xmlSettings = new XmlWriterSettings
             {
                 NewLineOnAttributes = true,
