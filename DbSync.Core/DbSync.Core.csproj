@@ -93,8 +93,8 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <!--<Target Name="AfterBuild" Condition=" '$(Configuration)' == 'Release'">
+  <Target Name="AfterBuild" Condition=" '$(Configuration)' == 'Release' AND '$(OS)' == 'Windows_NT'">
     <Exec Command="nuget pack $(ProjectFileName) -Prop Configuration=Release">
     </Exec>
-  </Target>-->
+  </Target>
 </Project>
