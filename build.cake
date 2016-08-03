@@ -1,3 +1,4 @@
+#tool "nuget:?package=NUnit.ConsoleRunner"
 var target = Argument("target", "Default");
 
 Task("Default")
@@ -8,8 +9,9 @@ Task("Default")
   XBuild(solution, new XBuildSettings {
     Configuration = "Release"
     });
-  
   Information("Project successfully built!");
+  NUnit3("./**/bin/Release/DbSync.Tests.dll");
+  Information("Tests completed");
 });
 
 Task("Publish")
