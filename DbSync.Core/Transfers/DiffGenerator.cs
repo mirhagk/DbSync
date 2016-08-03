@@ -34,7 +34,7 @@ namespace DbSync.Core.Transfers
             }
             return result;
         }
-        public int? CompareObjects(object key1, object key2)
+        public static int? CompareObjects(object key1, object key2)
         {
             {
                 long key1Data;

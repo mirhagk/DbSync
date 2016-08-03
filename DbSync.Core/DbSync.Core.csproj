@@ -50,6 +50,7 @@
   <ItemGroup>
     <Compile Include="Attributes\PrimaryKeyAttribute.cs" />
     <Compile Include="DataReaders\EmptyDataReader.cs" />
+    <Compile Include="DataReaders\OverrideDataReader.cs" />
     <Compile Include="DataReaders\InMemoryDataReader.cs" />
     <Compile Include="DataReaders\SimplifiedDataReader.cs" />
     <Compile Include="DataWriter\XmlDataWriter.cs" />
