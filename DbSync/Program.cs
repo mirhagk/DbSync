@@ -4,9 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
@@ -24,13 +26,14 @@ namespace DbSync
             public bool ImportScript { get; set; }
             public bool ImportDiff { get; set; }
             public bool Export { get; set; }
-            [PowerCommandParser.Required]
+            //[PowerCommandParser.Required]
             public string Config { get; set; }
             public string Job { get; set; }
             public string ImportScriptName { get; set; } = "ImportScript.sql";
             public string Environment { get; set; } = "local";
             public string ConnectionString { get; set; }
             public string WorkingDirectory { get; set; }
+            public bool Version { get; set; }
         }
         public class Settings
         {
@@ -88,6 +91,12 @@ namespace DbSync
             var cmdArgs = PowerCommandParser.Parser.ParseArguments<CommandLineArguments>(args);
             if (cmdArgs == null)
                 return;
+            if (cmdArgs.Version)
+            {
+                var assembly = Assembly.GetExecutingAssembly().GetName();
+                Console.WriteLine($"{assembly.Name} {assembly.Version}");
+                return;
+            }
             if (cmdArgs.WorkingDirectory != null)
                 Directory.SetCurrentDirectory(cmdArgs.WorkingDirectory);
 
