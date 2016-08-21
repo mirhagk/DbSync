@@ -52,7 +52,7 @@ namespace DbSync.Tests.Helpers
             UseAuditColumnsOnImport = false,
             Path = Folder.Path
         };
-        public void Create()
+        public void Create(string foreignKeyName = null, string foreignTable = null)
         {
             Folder = new TempFolder();
             Db = new PetaPoco.Database(ConnectionString, "SqlServer");
@@ -68,6 +68,11 @@ namespace DbSync.Tests.Helpers
                 columns.Add($"{property.Name} {dbType}");
             }
             Db.Execute($"CREATE TABLE [{typeof(T).Name}]({string.Join(", ", columns)})");
+            if (foreignKeyName != null)
+            {
+                string foreignKeyID = "id";
+                Db.Execute($"ALTER TABLE [{typeof(T).Name}]  WITH CHECK ADD CONSTRAINT [FK_{typeof(T).Name}_{foreignTable}_{foreignKeyName}] FOREIGN KEY [{foreignKeyName}] REFERENCES [{foreignTable}]([{foreignKeyID}])");
+            }
         }
         public void Initialize()
         {

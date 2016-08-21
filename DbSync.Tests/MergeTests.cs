@@ -28,6 +28,26 @@ namespace DbSync.Tests
                 return id.GetHashCode() ^ value.GetHashCode();
             }
         }
+        class ValueModifier
+        {
+            [XmlAttribute]
+            public int ID { get; set; }
+            [XmlAttribute]
+            public int ValuesID { get; set; }
+            [XmlAttribute]
+            public int Modifier { get; set; }
+            public override bool Equals(object obj)
+            {
+                if (!(obj is ValueModifier))
+                    return false;
+                var other = (ValueModifier)obj;
+                return other.ID == ID && other.ValuesID == ValuesID && other.Modifier == Modifier;
+            }
+            public override int GetHashCode()
+            {
+                return ID ^ ValuesID ^ Modifier;
+            }
+        }
         List<Values> GetValueList(params string[] values)
         {
             int id = 1;
@@ -56,6 +76,17 @@ namespace DbSync.Tests
                 test.Load(GetValueList("dawdaw\\dwadawd", "dwadaw'dwadaw", "\"\"dawdawda\"", "[]|_13155616378899!@#%$^^^(!#@!)@#)!@#!()~?/>;--\\"));
                 test.RoundTripCheck();
             }
+        }
+        [Test]
+        public void ForeignKeys()
+        {
+            using (var valueTest = new DatabaseTest<Values>())
+            using (var test = new DatabaseTest<ValueModifier>())
+            {
+                valueTest.Create();
+                test.Create(nameof(ValueModifier.ValuesID), nameof(Values));
+            }
+
         }
     }
 }
