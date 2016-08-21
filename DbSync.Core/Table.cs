@@ -116,6 +116,22 @@ LEFT JOIN sys.default_constraints df ON c.default_object_id =  df.object_id
 WHERE o.Name = @table AND s.Name = @schema
 ORDER BY column_id
 ", new { table = BasicName, schema = SchemaName }));
+            
+            ForeignKeys.AddRange(connection.Query<ForeignKey>(@"
+SELECT	ro.Name AS ForeignTable, 
+		rc.Name AS ForeignColumn,
+		pc.Name AS LocalColumn
+FROM sys.foreign_key_columns fkc
+LEFT JOIN sys.all_objects ro ON fkc.referenced_object_id = ro.object_id
+LEFT JOIN sys.all_columns rc ON fkc.referenced_column_id = rc.column_id AND fkc.referenced_object_id = rc.object_id
+LEFT JOIN sys.all_columns pc ON fkc.parent_column_id = pc.column_id AND fkc.parent_object_id = pc.object_id 
+WHERE fkc.parent_object_id = (
+	SELECT object_id 
+	FROM sys.tables t
+	INNER JOIN sys.schemas s ON s.schema_id = t.schema_id
+	WHERE t.name = @table AND s.name = @schema
+	)", new { table = BasicName, schema = SchemaName }));
+
             return Initialize(settings, errorHandler);
         }
 
@@ -136,8 +152,16 @@ ORDER BY column_id
             public bool IsAuditingColumn { get; set; }
             public string DefaultValue { get; set; }
         }
+        public class ForeignKey
+        {
+            public string ForeignTable { get; set; }
+            public string ForeignColumn { get; set; }
+            public string LocalColumn { get; set; }
+        }
         [XmlIgnore]
         public List<Field> Fields { get; } = new List<Field>();
+        [XmlIgnore]
+        public List<ForeignKey> ForeignKeys = new List<ForeignKey>();
         [XmlIgnore]
         public List<string> DataFields { get; private set; }
         [XmlAttribute]
