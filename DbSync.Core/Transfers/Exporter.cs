@@ -31,19 +31,27 @@ namespace DbSync.Core.Transfers
                         cmd.CommandText = $"SELECT * FROM {table.QualifiedName}";
                         var diffGenerator = new DiffGenerator();
                         var file = Path.Combine(settings.Path, table.Name + ".xml");
+                        IDataReader target = null;
                         try
                         {
-                            File.Move(file, file + ".old");
+                            if (File.Exists(file))
+                            {
+                                File.Move(file, file + ".old");
+                                target = new XmlRecordDataReader(file + ".old", table);
+                            }
+                            else
+                                target = new EmptyDataReader(table);
                             using (var source = cmd.ExecuteReader())
-                            using (var target = new XmlRecordDataReader(file + ".old", table))
                             using (var writer = new XmlDataWriter(table, settings))
                             {
                                 diffGenerator.GenerateDifference(source, target, table, writer, settings);
                             }
-                            File.Delete(file + ".old");
+                            if (File.Exists(file + ".old"))
+                                File.Delete(file + ".old");
                         }
                         finally
                         {
+                            target?.Dispose();
                             if (File.Exists(file + ".old"))//If the old file still exists then something went wrong. Revert back to the original
                             {
                                 if (File.Exists(file))
